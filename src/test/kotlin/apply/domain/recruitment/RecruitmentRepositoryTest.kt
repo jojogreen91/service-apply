@@ -2,7 +2,7 @@ package apply.domain.recruitment
 
 import apply.createRecruitment
 import io.kotest.assertions.assertSoftly
-import io.kotest.core.spec.style.AnnotationSpec
+import io.kotest.core.spec.style.StringSpec
 import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.nulls.shouldBeNull
 import org.springframework.boot.autoconfigure.domain.EntityScan
@@ -14,12 +14,17 @@ import support.test.RepositoryTest
 @EnableJpaRepositories("apply.domain.recruitment")
 @EntityScan("apply.domain.recruitment")
 @RepositoryTest
-class RecruitmentRepositoryTest(
+internal class RecruitmentRepositoryTest(
     private val recruitmentRepository: RecruitmentRepository,
     private val entityManager: TestEntityManager
-) : AnnotationSpec() {
-    @Test
-    fun `삭제 시 논리적 삭제가 적용된다`() {
+) : StringSpec({
+
+    fun flushAndClear() {
+        entityManager.flush()
+        entityManager.clear()
+    }
+
+    "삭제 시 논리적 삭제가 적용된다" {
         val recruitment = recruitmentRepository.save(createRecruitment())
         flushAndClear()
         recruitmentRepository.deleteById(recruitment.id)
@@ -28,9 +33,4 @@ class RecruitmentRepositoryTest(
             recruitmentRepository.findByIdOrNull(recruitment.id).shouldBeNull()
         }
     }
-
-    private fun flushAndClear() {
-        entityManager.flush()
-        entityManager.clear()
-    }
-}
+})

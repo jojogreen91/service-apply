@@ -7,38 +7,51 @@ import apply.domain.mission.MissionRepository
 import apply.utils.CsvGenerator
 import io.kotest.assertions.throwables.shouldNotThrow
 import io.kotest.assertions.throwables.shouldThrowExactly
-import io.kotest.core.spec.style.AnnotationSpec
+import io.kotest.core.spec.style.StringSpec
 import io.mockk.Runs
 import io.mockk.every
 import io.mockk.impl.annotations.MockK
 import io.mockk.just
+import io.mockk.mockk
 import io.mockk.mockkClass
 import io.mockk.verify
 import support.test.UnitTest
 import java.io.InputStream
 
 @UnitTest
-class EvaluationTargetCsvServiceTest : AnnotationSpec() {
+class EvaluationTargetCsvServiceTest : StringSpec({
+    fun getInputStream(fileName: String): InputStream {
+        return javaClass.classLoader.getResource(fileName)!!.openStream()
+    }
     @MockK
-    private lateinit var evaluationTargetService: EvaluationTargetService
-
-    @MockK
-    private lateinit var evaluationItemRepository: EvaluationItemRepository
-
-    @MockK
-    private lateinit var missionRepository: MissionRepository
+    var evaluationTargetService: EvaluationTargetService = mockk()
 
     @MockK
-    private lateinit var assignmentRepository: AssignmentRepository
+    var evaluationItemRepository: EvaluationItemRepository = mockk()
 
     @MockK
-    private lateinit var csvGenerator: CsvGenerator
+    var missionRepository: MissionRepository = mockk()
 
-    private lateinit var evaluationTargetCsvService: EvaluationTargetCsvService
+    @MockK
+    var assignmentRepository: AssignmentRepository = mockk()
 
-    @BeforeEach
-    internal fun setUp() {
+    @MockK
+    var csvGenerator: CsvGenerator = mockk()
+
+    var evaluationTargetCsvService: EvaluationTargetCsvService = EvaluationTargetCsvService(
+        evaluationTargetService,
+        evaluationItemRepository,
+        missionRepository,
+        assignmentRepository,
+        csvGenerator
+    )
+
+    beforeEach {
         evaluationTargetService = mockkClass(EvaluationTargetService::class)
+        evaluationItemRepository = mockk()
+        missionRepository = mockk()
+        assignmentRepository = mockk()
+        csvGenerator = mockk()
         evaluationTargetCsvService = EvaluationTargetCsvService(
             evaluationTargetService,
             evaluationItemRepository,
@@ -48,8 +61,7 @@ class EvaluationTargetCsvServiceTest : AnnotationSpec() {
         )
     }
 
-    @Test
-    fun `평가지 양식에 맞는 평가지 업로드 시 csv 읽기에 성공한다`() {
+    "평가지 양식에 맞는 평가지 업로드 시 csv 읽기에 성공한다" {
         val inputStream = getInputStream("evaluation.csv")
         val evaluationItems = listOf(
             createEvaluationItem(maximumScore = 1, position = 1),
@@ -64,8 +76,7 @@ class EvaluationTargetCsvServiceTest : AnnotationSpec() {
         verify(exactly = 1) { evaluationTargetService.gradeAll(any(), any()) }
     }
 
-    @Test
-    fun `상태에 대해 대소문자 구분을 하지 않고 평가지 업로드 시 csv 읽기에 성공한다`() {
+    "상태에 대해 대소문자 구분을 하지 않고 평가지 업로드 시 csv 읽기에 성공한다" {
         val inputStream = getInputStream("status_ignore_case_evaluation.csv")
         val evaluationItems = listOf(
             createEvaluationItem(maximumScore = 1, position = 1),
@@ -80,8 +91,7 @@ class EvaluationTargetCsvServiceTest : AnnotationSpec() {
         verify(exactly = 1) { evaluationTargetService.gradeAll(any(), any()) }
     }
 
-    @Test
-    fun `해당 평가에 맞지 않는 평가지 업로드 시 예외가 발생한다`() {
+    "해당 평가에 맞지 않는 평가지 업로드 시 예외가 발생한다" {
         val inputStream = getInputStream("another_evaluation.csv")
         val evaluationItems = listOf(
             createEvaluationItem(position = 1),
@@ -94,8 +104,7 @@ class EvaluationTargetCsvServiceTest : AnnotationSpec() {
         shouldThrowExactly<IllegalArgumentException> { evaluationTargetCsvService.updateTarget(inputStream, 1L) }
     }
 
-    @Test
-    fun `평가 항목의 최대 점수보다 높은 점수가 평가지에 포함될 시 예외가 발생한다`() {
+    "평가 항목의 최대 점수보다 높은 점수가 평가지에 포함될 시 예외가 발생한다" {
         val inputStream = getInputStream("evaluation_with_over_maximum_score.csv")
         val evaluationItems = listOf(
             createEvaluationItem(maximumScore = 1, position = 1),
@@ -107,8 +116,4 @@ class EvaluationTargetCsvServiceTest : AnnotationSpec() {
 
         shouldThrowExactly<IllegalArgumentException> { evaluationTargetCsvService.updateTarget(inputStream, 1L) }
     }
-
-    private fun getInputStream(fileName: String): InputStream {
-        return javaClass.classLoader.getResource(fileName)!!.openStream()
-    }
-}
+})

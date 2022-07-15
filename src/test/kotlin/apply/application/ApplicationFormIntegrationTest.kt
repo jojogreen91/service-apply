@@ -9,7 +9,7 @@ import apply.domain.recruitment.RecruitmentRepository
 import apply.domain.user.UserRepository
 import io.kotest.assertions.throwables.shouldNotThrow
 import io.kotest.assertions.throwables.shouldThrowExactly
-import io.kotest.core.spec.style.AnnotationSpec
+import io.kotest.core.spec.style.FreeSpec
 import support.test.IntegrationTest
 import java.time.LocalDateTime
 
@@ -19,9 +19,8 @@ class ApplicationFormIntegrationTest(
     private val userRepository: UserRepository,
     private val applicationFormRepository: ApplicationFormRepository,
     private val recruitmentRepository: RecruitmentRepository
-) : AnnotationSpec() {
-    @Test
-    fun `아직 지원하지 않은 경우 단독 모집에 지원 가능하다`() {
+) : FreeSpec({
+    "아직 지원하지 않은 경우 단독 모집에 지원 가능하다" {
         val recruitment = recruitmentRepository.save(createRecruitment(termId = 0L, recruitable = true))
         val user = userRepository.save(createUser())
         shouldNotThrow<Exception> {
@@ -32,8 +31,7 @@ class ApplicationFormIntegrationTest(
         }
     }
 
-    @Test
-    fun `이미 지원한 지원에는 중복으로 지원할 수 없다`() {
+    "이미 지원한 지원에는 중복으로 지원할 수 없다" {
         val recruitment = recruitmentRepository.save(createRecruitment(termId = 0L, recruitable = true))
         val user = userRepository.save(createUser())
         applicationFormRepository.save(
@@ -49,8 +47,7 @@ class ApplicationFormIntegrationTest(
         }
     }
 
-    @Test
-    fun `동일한 기수의 다른 모집에 지원할 수 없다`() {
+    "동일한 기수의 다른 모집에 지원할 수 없다" {
         val user = userRepository.save(createUser())
         val appliedRecruitment = recruitmentRepository.save(createRecruitment(termId = 1L))
         applicationFormRepository.save(
@@ -67,8 +64,7 @@ class ApplicationFormIntegrationTest(
         }
     }
 
-    @Test
-    fun `동일한 기수의 다른 모집에 임시 저장되어 있어도 지원서를 제출할 수 있다`() {
+    "동일한 기수의 다른 모집에 임시 저장되어 있어도 지원서를 제출할 수 있다" {
         val user = userRepository.save(createUser())
         val appliedRecruitment = recruitmentRepository.save(createRecruitment(termId = 1L))
         applicationFormRepository.save(createApplicationForm(user.id, appliedRecruitment.id, submitted = false))
@@ -82,8 +78,7 @@ class ApplicationFormIntegrationTest(
         }
     }
 
-    @Test
-    fun `동일한 기수의 다른 모집에 이미 지원서를 제출한 경우에는 지원서를 제출할 수 없다`() {
+    "동일한 기수의 다른 모집에 이미 지원서를 제출한 경우에는 지원서를 제출할 수 없다" {
         val user = userRepository.save(createUser())
         val appliedRecruitment = recruitmentRepository.save(createRecruitment(termId = 1L))
         applicationFormRepository.save(
@@ -104,10 +99,9 @@ class ApplicationFormIntegrationTest(
         }
     }
 
-    @AfterEach
-    internal fun tearDown() {
+    afterEach {
         userRepository.deleteAll()
         applicationFormRepository.deleteAll()
         recruitmentRepository.deleteAll()
     }
-}
+})

@@ -18,7 +18,7 @@ import io.kotest.assertions.assertSoftly
 import io.kotest.assertions.throwables.shouldNotThrow
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.assertions.throwables.shouldThrowExactly
-import io.kotest.core.spec.style.AnnotationSpec
+import io.kotest.core.spec.style.FreeSpec
 import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
@@ -32,114 +32,83 @@ import support.test.UnitTest
 import java.time.LocalDateTime
 
 @UnitTest
-class ApplicationFormServiceTest : AnnotationSpec() {
+class ApplicationFormServiceTest : FreeSpec({
     @MockK
-    private lateinit var applicationFormRepository: ApplicationFormRepository
-
-    @MockK
-    private lateinit var recruitmentRepository: RecruitmentRepository
+    val applicationFormRepository: ApplicationFormRepository = mockk()
 
     @MockK
-    private lateinit var recruitmentItemRepository: RecruitmentItemRepository
+    val recruitmentRepository: RecruitmentRepository = mockk()
 
     @MockK
-    private lateinit var applicationValidator: ApplicationValidator
+    val recruitmentItemRepository: RecruitmentItemRepository = mockk()
 
-    private lateinit var applicationFormService: ApplicationFormService
+    @MockK
+    val applicationValidator: ApplicationValidator = mockk()
 
-    private lateinit var applicationForm1: ApplicationForm
-    private lateinit var applicationForm2: ApplicationForm
-    private lateinit var applicationFormSubmitted: ApplicationForm
-    private lateinit var applicationForms: List<ApplicationForm>
-    private lateinit var applicationFormResponse: ApplicationFormResponse
-    private lateinit var createApplicationFormRequest: CreateApplicationFormRequest
-    private lateinit var updateApplicationFormRequest: UpdateApplicationFormRequest
-    private lateinit var updateApplicationFormRequestWithPassword: UpdateApplicationFormRequest
+    val userId: Long = 1L
 
-    private lateinit var recruitment: Recruitment
-    private lateinit var recruitmentItems: List<RecruitmentItem>
-    private lateinit var recruitmentNotRecruiting: Recruitment
-    private lateinit var recruitmentHidden: Recruitment
+    val applicationFormService: ApplicationFormService = ApplicationFormService(
+        applicationFormRepository,
+        recruitmentRepository,
+        recruitmentItemRepository,
+        applicationValidator
+    )
 
-    private val userId: Long = 1L
+    val applicationForm1: ApplicationForm = createApplicationForm()
+    val applicationForm2: ApplicationForm = createApplicationForm(userId = 2L)
+    val applicationFormSubmitted: ApplicationForm = createApplicationForm(userId = 3L).apply { submit(pass) }
+    val applicationForms: List<ApplicationForm> = createApplicationForms()
+    val applicationFormResponse: ApplicationFormResponse = ApplicationFormResponse(
+        id = applicationForm1.id,
+        recruitmentId = applicationForm1.recruitmentId,
+        referenceUrl = applicationForm1.referenceUrl,
+        submitted = applicationForm1.submitted,
+        answers = applicationForm1.answers.items.map { AnswerResponse(it.contents, it.recruitmentItemId) },
+        createdDateTime = applicationForm1.createdDateTime,
+        modifiedDateTime = applicationForm1.modifiedDateTime,
+        submittedDateTime = applicationForm1.submittedDateTime
+    )
+    val createApplicationFormRequest: CreateApplicationFormRequest = CreateApplicationFormRequest(userId)
+    val updateApplicationFormRequest: UpdateApplicationFormRequest = UpdateApplicationFormRequest(
+        recruitmentId = applicationForm1.recruitmentId,
+        referenceUrl = applicationForm1.referenceUrl,
+        submitted = false,
+        answers = applicationForm1.answers.items.map { AnswerRequest(it.contents, it.recruitmentItemId) }
+    )
+    val updateApplicationFormRequestWithPassword: UpdateApplicationFormRequest = UpdateApplicationFormRequest(
+        recruitmentId = applicationForm1.recruitmentId,
+        referenceUrl = applicationForm1.referenceUrl,
+        submitted = false,
+        answers = applicationForm1.answers.items.map { AnswerRequest(it.contents, it.recruitmentItemId) }
+    )
 
-    @BeforeEach
-    internal fun setUp() {
-        this.applicationFormService = ApplicationFormService(
-            applicationFormRepository,
-            recruitmentRepository,
-            recruitmentItemRepository,
-            applicationValidator
-        )
-
-        applicationForm1 = createApplicationForm()
-
-        applicationForm2 = createApplicationForm(userId = 2L)
-
-        applicationFormSubmitted = createApplicationForm(userId = 3L).apply { submit(pass) }
-
-        applicationForms = createApplicationForms()
-
-        applicationFormResponse = ApplicationFormResponse(
-            id = applicationForm1.id,
+    val recruitment: Recruitment = createRecruitment(hidden = false)
+    val recruitmentItems: List<RecruitmentItem> = listOf(
+        createRecruitmentItem(
             recruitmentId = applicationForm1.recruitmentId,
-            referenceUrl = applicationForm1.referenceUrl,
-            submitted = applicationForm1.submitted,
-            answers = applicationForm1.answers.items.map { AnswerResponse(it.contents, it.recruitmentItemId) },
-            createdDateTime = applicationForm1.createdDateTime,
-            modifiedDateTime = applicationForm1.modifiedDateTime,
-            submittedDateTime = applicationForm1.submittedDateTime
-        )
-
-        createApplicationFormRequest = CreateApplicationFormRequest(userId)
-
-        updateApplicationFormRequest = UpdateApplicationFormRequest(
+            position = 1,
+            id = 1L
+        ),
+        createRecruitmentItem(
             recruitmentId = applicationForm1.recruitmentId,
-            referenceUrl = applicationForm1.referenceUrl,
-            submitted = false,
-            answers = applicationForm1.answers.items.map { AnswerRequest(it.contents, it.recruitmentItemId) }
+            position = 2,
+            id = 2L
         )
+    )
+    val recruitmentNotRecruiting: Recruitment = createRecruitment(
+        startDateTime = LocalDateTime.now().minusHours(2),
+        endDateTime = LocalDateTime.now().minusHours(1),
+        hidden = false
+    )
+    val recruitmentHidden: Recruitment = createRecruitment()
 
-        recruitmentItems = listOf(
-            createRecruitmentItem(
-                recruitmentId = applicationForm1.recruitmentId,
-                position = 1,
-                id = 1L
-            ),
-            createRecruitmentItem(
-                recruitmentId = applicationForm1.recruitmentId,
-                position = 2,
-                id = 2L
-            )
-        )
-
-        updateApplicationFormRequestWithPassword = UpdateApplicationFormRequest(
-            recruitmentId = applicationForm1.recruitmentId,
-            referenceUrl = applicationForm1.referenceUrl,
-            submitted = false,
-            answers = applicationForm1.answers.items.map { AnswerRequest(it.contents, it.recruitmentItemId) }
-        )
-
-        recruitment = createRecruitment(hidden = false)
-
-        recruitmentNotRecruiting = createRecruitment(
-            startDateTime = LocalDateTime.now().minusHours(2),
-            endDateTime = LocalDateTime.now().minusHours(1),
-            hidden = false
-        )
-
-        recruitmentHidden = createRecruitment()
-    }
-
-    @Test
-    fun `지원서가 있으면 지원서를 불러온다`() {
+    "지원서가 있으면 지원서를 불러온다" {
         every { applicationFormRepository.findByRecruitmentIdAndUserId(any(), any()) } returns applicationForm1
 
         applicationFormService.getApplicationForm(userId, 1L) shouldBe applicationFormResponse
     }
 
-    @Test
-    fun `지원서가 없으면 예외를 던진다`() {
+    "지원서가 없으면 예외를 던진다" {
         every { applicationFormRepository.findByRecruitmentIdAndUserId(any(), any()) } returns null
 
         shouldThrowExactly<IllegalArgumentException> {
@@ -147,8 +116,7 @@ class ApplicationFormServiceTest : AnnotationSpec() {
         }
     }
 
-    @Test
-    fun `지원자가 자신의 지원서를 모두 불러온다`() {
+    "지원자가 자신의 지원서를 모두 불러온다" {
         every { applicationFormRepository.findAllByUserId(userId) } returns applicationForms
 
         val expected = applicationFormService.getMyApplicationForms(userId)
@@ -159,8 +127,7 @@ class ApplicationFormServiceTest : AnnotationSpec() {
         }
     }
 
-    @Test
-    fun `지원자가 지원한 지원서가 없으면 빈 리스트를 불러온다`() {
+    "지원자가 지원한 지원서가 없으면 빈 리스트를 불러온다" {
         every { applicationFormRepository.findAllByUserId(userId) } returns emptyList()
 
         val expected = applicationFormService.getMyApplicationForms(userId)
@@ -171,8 +138,7 @@ class ApplicationFormServiceTest : AnnotationSpec() {
         }
     }
 
-    @Test
-    fun `지원서를 생성한다`() {
+    "지원서를 생성한다" {
         every { recruitmentRepository.findByIdOrNull(any()) } returns recruitment
         every { applicationFormRepository.existsByRecruitmentIdAndUserId(any(), any()) } returns false
         every { applicationFormRepository.save(any<ApplicationForm>()) } returns mockk()
@@ -181,8 +147,7 @@ class ApplicationFormServiceTest : AnnotationSpec() {
         shouldNotThrow<Exception> { applicationFormService.create(userId, createApplicationFormRequest) }
     }
 
-    @Test
-    fun `이미 작성한 지원서가 있는 경우 지원할 수 없다`() {
+    "이미 작성한 지원서가 있는 경우 지원할 수 없다" {
         every { recruitmentRepository.findByIdOrNull(any()) } returns recruitment
         every { applicationFormRepository.existsByRecruitmentIdAndUserId(any(), any()) } returns true
         every { applicationFormRepository.save(any<ApplicationForm>()) } returns mockk()
@@ -196,8 +161,7 @@ class ApplicationFormServiceTest : AnnotationSpec() {
         }
     }
 
-    @Test
-    fun `모집이 없는 경우 지원할 수 없다`() {
+    "모집이 없는 경우 지원할 수 없다" {
         every { recruitmentRepository.findByIdOrNull(any()) } returns null
 
         shouldThrowExactly<NoSuchElementException> {
@@ -208,8 +172,7 @@ class ApplicationFormServiceTest : AnnotationSpec() {
         }
     }
 
-    @Test
-    fun `지원서를 수정한다`() {
+    "지원서를 수정한다" {
         every { recruitmentRepository.findByIdOrNull(any()) } returns recruitment
         every { applicationFormRepository.findByRecruitmentIdAndUserId(any(), any()) } returns applicationForm1
         every { recruitmentItemRepository.findByRecruitmentIdOrderByPosition(any()) } returns recruitmentItems
@@ -218,8 +181,7 @@ class ApplicationFormServiceTest : AnnotationSpec() {
         shouldNotThrow<Exception> { applicationFormService.update(userId, updateApplicationFormRequest) }
     }
 
-    @Test
-    fun `지원서가 없는 경우 수정할 수 없다`() {
+    "지원서가 없는 경우 수정할 수 없다" {
         every { recruitmentRepository.findByIdOrNull(any()) } returns recruitment
         every { recruitmentItemRepository.findByRecruitmentIdOrderByPosition(any()) } returns recruitmentItems
         every { applicationFormRepository.existsByUserIdAndSubmittedTrue(any()) } returns false
@@ -233,8 +195,7 @@ class ApplicationFormServiceTest : AnnotationSpec() {
         }
     }
 
-    @Test
-    fun `모집중이 아닌 지원서를 수정할 수 없다`() {
+    "모집중이 아닌 지원서를 수정할 수 없다" {
         every { recruitmentRepository.findByIdOrNull(any()) } returns recruitmentNotRecruiting
 
         shouldThrowExactly<IllegalStateException> {
@@ -245,8 +206,7 @@ class ApplicationFormServiceTest : AnnotationSpec() {
         }
     }
 
-    @Test
-    fun `제출한 지원서를 열람할 수 없다`() {
+    "제출한 지원서를 열람할 수 없다" {
         every {
             applicationFormRepository.findByRecruitmentIdAndUserId(
                 any(),
@@ -262,8 +222,7 @@ class ApplicationFormServiceTest : AnnotationSpec() {
         }
     }
 
-    @Test
-    fun `작성하지 않은 문항이 존재하는 경우 제출할 수 없다`() {
+    "작성하지 않은 문항이 존재하는 경우 제출할 수 없다" {
         every { recruitmentRepository.findByIdOrNull(any()) } returns recruitment
         every { recruitmentItemRepository.findByRecruitmentIdOrderByPosition(any()) } returns recruitmentItems
         every { applicationFormRepository.existsByUserIdAndSubmittedTrue(any()) } returns false
@@ -277,8 +236,7 @@ class ApplicationFormServiceTest : AnnotationSpec() {
         }
     }
 
-    @Test
-    fun `유효하지 않은 문항이 존재하는 경우 제출할 수 없다`() {
+    "유효하지 않은 문항이 존재하는 경우 제출할 수 없다" {
         every { recruitmentRepository.findByIdOrNull(any()) } returns recruitment
         every { recruitmentItemRepository.findByRecruitmentIdOrderByPosition(any()) } returns recruitmentItems
         every { applicationFormRepository.existsByUserIdAndSubmittedTrue(any()) } returns false
@@ -298,4 +256,4 @@ class ApplicationFormServiceTest : AnnotationSpec() {
             )
         }
     }
-}
+})

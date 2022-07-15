@@ -6,7 +6,7 @@ import apply.domain.applicationform.ApplicationFormRepository
 import apply.domain.cheater.Cheater
 import apply.domain.cheater.CheaterRepository
 import apply.domain.user.UserRepository
-import io.kotest.core.spec.style.DescribeSpec
+import io.kotest.core.spec.style.FreeSpec
 import io.kotest.matchers.booleans.shouldBeTrue
 import io.kotest.matchers.collections.shouldHaveSize
 import io.mockk.every
@@ -15,7 +15,7 @@ import io.mockk.slot
 import support.test.UnitTest
 
 @UnitTest
-class ApplicantServiceTest : DescribeSpec({
+class ApplicantServiceTest : FreeSpec({
     val userRepository: UserRepository = mockk()
     val cheaterRepository: CheaterRepository = mockk()
     val applicationFormRepository: ApplicationFormRepository = mockk()
@@ -44,21 +44,19 @@ class ApplicantServiceTest : DescribeSpec({
         }
     }
 
-    describe("ApplicantService") {
-        context("지원자를 찾을 때") {
-            it("지원자 정보와 부정 행위자 여부를 함께 제공한다") {
-                val actual = applicantService.findAllByRecruitmentIdAndKeyword(1L)
+    "지원자를 찾을 때" - {
+        "지원자 정보와 부정 행위자 여부를 함께 제공한다" {
+            val actual = applicantService.findAllByRecruitmentIdAndKeyword(1L)
 
-                actual shouldHaveSize 1
-                actual[0].isCheater.shouldBeTrue()
-            }
+            actual shouldHaveSize 1
+            actual[0].isCheater.shouldBeTrue()
+        }
 
-            it("키워드로 찾은 지원자 정보와 부정 행위자 여부를 함께 제공한다") {
-                val actual = applicantService.findAllByRecruitmentIdAndKeyword(1L, "amazzi")
+        "키워드로 찾은 지원자 정보와 부정 행위자 여부를 함께 제공한다" - {
+            val actual = applicantService.findAllByRecruitmentIdAndKeyword(1L, "amazzi")
 
-                actual shouldHaveSize 1
-                actual[0].isCheater.shouldBeTrue()
-            }
+            actual shouldHaveSize 1
+            actual[0].isCheater.shouldBeTrue()
         }
     }
 })

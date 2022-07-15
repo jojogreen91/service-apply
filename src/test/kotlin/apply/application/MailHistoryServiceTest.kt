@@ -4,34 +4,28 @@ import apply.createMailData
 import apply.createMailHistory
 import apply.domain.mail.MailHistoryRepository
 import io.kotest.assertions.throwables.shouldNotThrow
-import io.kotest.core.spec.style.AnnotationSpec
+import io.kotest.core.spec.style.FreeSpec
 import io.kotest.matchers.collections.shouldContainExactly
 import io.mockk.every
 import io.mockk.impl.annotations.MockK
+import io.mockk.mockk
 import support.test.UnitTest
 import java.time.LocalDateTime
 
 @UnitTest
-class MailHistoryServiceTest : AnnotationSpec() {
+class MailHistoryServiceTest : FreeSpec({
     @MockK
-    private lateinit var mailHistoryRepository: MailHistoryRepository
+    val mailHistoryRepository: MailHistoryRepository = mockk()
 
-    private lateinit var mailHistoryService: MailHistoryService
+    val mailHistoryService: MailHistoryService = MailHistoryService(mailHistoryRepository)
 
-    @BeforeEach
-    internal fun setUp() {
-        mailHistoryService = MailHistoryService(mailHistoryRepository)
-    }
-
-    @Test
-    fun `메일 이력을 저장한다`() {
+    "메일 이력을 저장한다" {
         val mailData = createMailData()
         every { mailHistoryRepository.save(any()) } returns createMailHistory()
         shouldNotThrow<Exception> { mailHistoryService.save(mailData) }
     }
 
-    @Test
-    fun `저장된 메일 이력을 모두 조회한다`() {
+    "저장된 메일 이력을 모두 조회한다" {
         val now = LocalDateTime.now()
         val mailData1 = createMailData(subject = "제목1", sentTime = now)
         val mailData2 = createMailData(subject = "제목2", sentTime = now.plusSeconds(1))
@@ -40,4 +34,4 @@ class MailHistoryServiceTest : AnnotationSpec() {
         every { mailHistoryRepository.findAll() } returns listOf(emailHistory1, emailHistory2)
         mailHistoryService.findAll().shouldContainExactly(mailData1, mailData2)
     }
-}
+})

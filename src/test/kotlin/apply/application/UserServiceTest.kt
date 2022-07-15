@@ -16,7 +16,7 @@ import apply.domain.user.getById
 import io.kotest.assertions.assertSoftly
 import io.kotest.assertions.throwables.shouldNotThrow
 import io.kotest.assertions.throwables.shouldThrowExactly
-import io.kotest.core.spec.style.DescribeSpec
+import io.kotest.core.spec.style.FreeSpec
 import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
 import io.mockk.every
@@ -25,12 +25,12 @@ import io.mockk.slot
 import support.test.UnitTest
 
 @UnitTest
-internal class UserServiceTest : DescribeSpec({
+internal class UserServiceTest : FreeSpec({
     val userRepository: UserRepository = mockk()
     val passwordGenerator: PasswordGenerator = mockk()
     val userService = UserService(userRepository, passwordGenerator)
 
-    describe("UserService") {
+    "UserService" - {
         var user: User = createUser()
         var request: ResetPasswordRequest = mockk()
 
@@ -41,20 +41,20 @@ internal class UserServiceTest : DescribeSpec({
             userService.resetPassword(request)
         }
 
-        context("개인정보를 비교할 때") {
-            it("일치한다면 초기화한다") {
+        "개인정보를 비교할 때" - {
+            "일치한다면 초기화한다" {
                 every { userRepository.save(any()) } returns user
                 request = ResetPasswordRequest(NAME, EMAIL, BIRTHDAY)
                 subject()
                 user.password shouldBe Password(RANDOM_PASSWORD_TEXT)
             }
-            it("일치하지 않는다면 예외가 발생한다") {
+            "일치하지 않는다면 예외가 발생한다" {
                 request = ResetPasswordRequest("가짜 이름", EMAIL, BIRTHDAY)
                 shouldThrowExactly<UnidentifiedUserException> { subject() }
             }
         }
 
-        context("비밀번호를 비교할 때") {
+        "비밀번호를 비교할 때" - {
             var request: EditPasswordRequest = mockk()
             fun subject() {
                 userService.editPassword(1L, request)
@@ -62,22 +62,22 @@ internal class UserServiceTest : DescribeSpec({
             slot<Long>().also { slot ->
                 every { userRepository.getById(capture(slot)) } answers { createUser(id = slot.captured) }
             }
-            it("일치한다면 변경한다") {
+            "일치한다면 변경한다" {
                 request = EditPasswordRequest(PASSWORD, Password("new_password"), Password("new_password"))
                 shouldNotThrow<Exception> { subject() }
             }
-            it("일치하지 않다면 예외가 발생한다") {
+            "일치하지 않다면 예외가 발생한다" {
                 request = EditPasswordRequest(WRONG_PASSWORD, Password("new_password"), Password("new_password"))
                 shouldThrowExactly<UnidentifiedUserException> { subject() }
             }
-            it("확인용 비밀번호가 일치하지 않으면 예외가 발생한다") {
+            "확인용 비밀번호가 일치하지 않으면 예외가 발생한다" {
                 request = EditPasswordRequest(WRONG_PASSWORD, Password("new_password"), Password("wrong_password"))
                 shouldThrowExactly<IllegalArgumentException> { subject() }
             }
         }
 
-        context("회원정보를") {
-            it("조회한다") {
+        "회원정보를" - {
+            "조회한다" {
                 val user = createUser()
                 every { userRepository.getById(any()) } returns user
 
@@ -92,7 +92,7 @@ internal class UserServiceTest : DescribeSpec({
                     expected.birthday.shouldNotBeNull()
                 }
             }
-            it("변경한다") {
+            "변경한다" {
                 val request = EditInformationRequest("010-9999-9999")
                 val user = createUser(phoneNumber = "010-0000-0000")
                 every { userRepository.getById(any()) } returns user

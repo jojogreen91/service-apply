@@ -29,7 +29,7 @@ import apply.domain.user.User
 import apply.domain.user.UserRepository
 import apply.domain.user.findAllByEmailIn
 import io.kotest.assertions.assertSoftly
-import io.kotest.core.spec.style.AnnotationSpec
+import io.kotest.core.spec.style.FreeSpec
 import io.kotest.matchers.booleans.shouldBeTrue
 import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.equality.shouldBeEqualToComparingFields
@@ -37,6 +37,7 @@ import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldBeBlank
 import io.mockk.every
 import io.mockk.impl.annotations.MockK
+import io.mockk.mockk
 import org.springframework.data.repository.findByIdOrNull
 import support.createLocalDate
 import support.createLocalDateTime
@@ -45,38 +46,63 @@ import support.test.RepositoryTest
 @RepositoryTest
 class EvaluationTargetServiceTest(
     private val evaluationTargetRepository: EvaluationTargetRepository
-) : AnnotationSpec() {
+) : FreeSpec({
     @MockK
-    private lateinit var evaluationRepository: EvaluationRepository
-
-    @MockK
-    private lateinit var applicationFormRepository: ApplicationFormRepository
+    val evaluationRepository: EvaluationRepository = mockk()
 
     @MockK
-    private lateinit var userRepository: UserRepository
+    val applicationFormRepository: ApplicationFormRepository = mockk()
 
     @MockK
-    private lateinit var cheaterRepository: CheaterRepository
+    val userRepository: UserRepository = mockk()
 
     @MockK
-    private lateinit var evaluationItemRepository: EvaluationItemRepository
+    val cheaterRepository: CheaterRepository = mockk()
 
-    private lateinit var evaluationTargetService: EvaluationTargetService
+    @MockK
+    val evaluationItemRepository: EvaluationItemRepository = mockk()
 
-    @BeforeEach
-    fun setUp() {
-        evaluationTargetService = EvaluationTargetService(
-            evaluationRepository,
-            evaluationTargetRepository,
-            evaluationItemRepository,
-            applicationFormRepository,
-            userRepository,
-            cheaterRepository
+    val evaluationTargetService: EvaluationTargetService = EvaluationTargetService(
+        evaluationRepository,
+        evaluationTargetRepository,
+        evaluationItemRepository,
+        applicationFormRepository,
+        userRepository,
+        cheaterRepository
+    )
+
+    fun createApplicationForm(id: Long, recruitmentId: Long = 1L, userId: Long): ApplicationForm {
+        return ApplicationForm(
+            userId = userId,
+            recruitmentId = recruitmentId,
+            referenceUrl = "",
+            submitted = true,
+            createdDateTime = createLocalDateTime(2019, 10, 25, 10),
+            modifiedDateTime = createLocalDateTime(2019, 11, 5, 10),
+            submittedDateTime = createLocalDateTime(2019, 11, 5, 10),
+            answers = ApplicationFormAnswers(
+                mutableListOf(
+                    ApplicationFormAnswer("${id}의 1번 답", 1L),
+                    ApplicationFormAnswer("${id}의 2번 답", 2L)
+                )
+            ),
+            id = id
         )
     }
 
-    @Test
-    fun `이전 평가가 없고 저장 된 평가 대상자가 없을 경우 저장하고 불러온다`() {
+    fun createUser(id: Long): User {
+        return User(
+            id = id,
+            name = "홍길동$id",
+            email = "$id@email.com",
+            phoneNumber = "010-0000-0000",
+            gender = Gender.MALE,
+            birthday = createLocalDate(2020, 4, 17),
+            password = Password("password")
+        )
+    }
+
+    "이전 평가가 없고 저장 된 평가 대상자가 없을 경우 저장하고 불러온다" {
         // given
         val firstEvaluation = createEvaluation()
 
@@ -119,8 +145,7 @@ class EvaluationTargetServiceTest(
         }
     }
 
-    @Test
-    fun `이전 평가가 있고 저장 된 평가 대상자가 없을 경우 저장하고 불러온다`() {
+    "이전 평가가 있고 저장 된 평가 대상자가 없을 경우 저장하고 불러온다" {
         // given
         val savedEvaluationTargets = listOf(
             createEvaluationTarget(1L, 1L, WAITING),
@@ -153,8 +178,7 @@ class EvaluationTargetServiceTest(
         }
     }
 
-    @Test
-    fun `이전 평가가 없고 저장 된 평가 대상자가 있을 경우 갱신하여 불러온다, 새로 등록된 지원자를 평가 대상자에 추가한다`() {
+    "이전 평가가 없고 저장 된 평가 대상자가 있을 경우 갱신하여 불러온다, 새로 등록된 지원자를 평가 대상자에 추가한다" {
         // given
         val savedEvaluationTargets = listOf(
             createEvaluationTarget(1L, 1L, FAIL),
@@ -209,8 +233,7 @@ class EvaluationTargetServiceTest(
         }
     }
 
-    @Test
-    fun `이전 평가가 있고 저장 된 평가 대상자가 있을 경우 갱신하고 불러온다, 이전 평가의 평가 대상자의 평가가 FAIL로 바뀌면 제거한다`() {
+    "이전 평가가 있고 저장 된 평가 대상자가 있을 경우 갱신하고 불러온다, 이전 평가의 평가 대상자의 평가가 FAIL로 바뀌면 제거한다" {
         // given
         val savedCurrentEvaluationTargets = listOf(
             createEvaluationTarget(2L, 1L, WAITING),
@@ -256,8 +279,7 @@ class EvaluationTargetServiceTest(
         }
     }
 
-    @Test
-    fun `평가자 불러오기 시 부정행위자는 불합격 상태로 불러온다`() {
+    "평가자 불러오기 시 부정행위자는 불합격 상태로 불러온다" {
         // given
         val savedEvaluationTargets = listOf(
             createEvaluationTarget(1L, 1L, FAIL),
@@ -307,8 +329,7 @@ class EvaluationTargetServiceTest(
         }
     }
 
-    @Test
-    fun `현재 평가를 불러올 때, 평가 대상자가 부정행위자로 지정되어 탈락 처리되는 경우, 현재 평가에만 영향이 가는지 확인한다`() {
+    "현재 평가를 불러올 때, 평가 대상자가 부정행위자로 지정되어 탈락 처리되는 경우, 현재 평가에만 영향이 가는지 확인한다" {
         // given
         val beforeEvaluationTarget = createEvaluationTarget(1L, 1L, PASS)
         val currentEvaluationTarget = createEvaluationTarget(2L, 1L, PASS)
@@ -340,8 +361,7 @@ class EvaluationTargetServiceTest(
         }
     }
 
-    @Test
-    fun `평가 대상을 평가(채점)한 적이 없을 때, 채점 정보를 불러온다`() {
+    "평가 대상을 평가(채점)한 적이 없을 때, 채점 정보를 불러온다" {
         val evaluation = createEvaluation(id = EVALUATION_ID, beforeEvaluationId = 1L)
         val evaluationItem = createEvaluationItem(id = 1L)
         val evaluationTarget =
@@ -363,8 +383,7 @@ class EvaluationTargetServiceTest(
         }
     }
 
-    @Test
-    fun `평가 대상을 평가(채점)한 적이 있을 때, 채점 정보를 불러온다`() {
+    "평가 대상을 평가(채점)한 적이 있을 때, 채점 정보를 불러온다" {
         val evaluation = createEvaluation(id = EVALUATION_ID, beforeEvaluationId = 1L)
         val evaluationItem = createEvaluationItem(id = EVALUATION_ITEM_ID)
         val answers = EvaluationAnswers(mutableListOf(createEvaluationAnswer()))
@@ -388,8 +407,7 @@ class EvaluationTargetServiceTest(
         }
     }
 
-    @Test
-    fun `평가 대상 지원자를 평가하면 평가 상태, 특이사항, 평가 항목에 대한 점수들이 변경된다`() {
+    "평가 대상 지원자를 평가하면 평가 상태, 특이사항, 평가 항목에 대한 점수들이 변경된다" {
         val evaluationTarget = evaluationTargetRepository.save(createEvaluationTarget(1L, 2L, WAITING))
 
         val updatedScore = 5
@@ -408,35 +426,4 @@ class EvaluationTargetServiceTest(
             updatedEvaluationTarget.evaluationAnswers shouldBeEqualToComparingFields expectedAnswers
         }
     }
-
-    private fun createApplicationForm(id: Long, recruitmentId: Long = 1L, userId: Long): ApplicationForm {
-        return ApplicationForm(
-            userId = userId,
-            recruitmentId = recruitmentId,
-            referenceUrl = "",
-            submitted = true,
-            createdDateTime = createLocalDateTime(2019, 10, 25, 10),
-            modifiedDateTime = createLocalDateTime(2019, 11, 5, 10),
-            submittedDateTime = createLocalDateTime(2019, 11, 5, 10),
-            answers = ApplicationFormAnswers(
-                mutableListOf(
-                    ApplicationFormAnswer("${id}의 1번 답", 1L),
-                    ApplicationFormAnswer("${id}의 2번 답", 2L)
-                )
-            ),
-            id = id
-        )
-    }
-
-    private fun createUser(id: Long): User {
-        return User(
-            id = id,
-            name = "홍길동$id",
-            email = "$id@email.com",
-            phoneNumber = "010-0000-0000",
-            gender = Gender.MALE,
-            birthday = createLocalDate(2020, 4, 17),
-            password = Password("password")
-        )
-    }
-}
+})

@@ -13,31 +13,26 @@ import apply.domain.evaluationtarget.EvaluationTargetRepository
 import apply.domain.user.UserRepository
 import apply.domain.user.findAllByEmailIn
 import io.kotest.assertions.assertSoftly
-import io.kotest.core.spec.style.AnnotationSpec
+import io.kotest.core.spec.style.FreeSpec
 import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.shouldBe
 import io.mockk.every
 import io.mockk.impl.annotations.MockK
+import io.mockk.mockk
 import io.mockk.verify
 import support.test.UnitTest
 
 @UnitTest
-class MailTargetServiceTest : AnnotationSpec() {
+class MailTargetServiceTest : FreeSpec({
     @MockK
-    private lateinit var evaluationTargetRepository: EvaluationTargetRepository
+    val evaluationTargetRepository: EvaluationTargetRepository = mockk()
 
     @MockK
-    private lateinit var userRepository: UserRepository
+    val userRepository: UserRepository = mockk()
 
-    private lateinit var mailTargetService: MailTargetService
+    val mailTargetService: MailTargetService = MailTargetService(evaluationTargetRepository, userRepository)
 
-    @BeforeEach
-    internal fun setUp() {
-        mailTargetService = MailTargetService(evaluationTargetRepository, userRepository)
-    }
-
-    @Test
-    fun `평가 상태에 따라 (null, 전체) 메일 발송 대상들의 이메일 정보를 불러온다`() {
+    "평가 상태에 따라 (null, 전체) 메일 발송 대상들의 이메일 정보를 불러온다" {
         every { evaluationTargetRepository.findAllByEvaluationId(any()) } returns listOf(
             createEvaluationTarget(userId = 1L, evaluationStatus = WAITING),
             createEvaluationTarget(userId = 2L, evaluationStatus = PENDING),
@@ -54,8 +49,7 @@ class MailTargetServiceTest : AnnotationSpec() {
         actual shouldHaveSize 4
     }
 
-    @Test
-    fun `평가 상태에 따라 (PASS) 메일 발송 대상들의 이메일 정보를 불러온다`() {
+    "평가 상태에 따라 (PASS) 메일 발송 대상들의 이메일 정보를 불러온다" {
         every { evaluationTargetRepository.findAllByEvaluationIdAndEvaluationStatus(any(), any()) } returns listOf(
             createEvaluationTarget(userId = 3L, evaluationStatus = PASS)
         )
@@ -69,8 +63,7 @@ class MailTargetServiceTest : AnnotationSpec() {
         }
     }
 
-    @Test
-    fun `평가 상태에 따라 (FAIL) 메일 발송 대상들의 이메일 정보를 불러온다`() {
+    "평가 상태에 따라 (FAIL) 메일 발송 대상들의 이메일 정보를 불러온다" {
         every { evaluationTargetRepository.findAllByEvaluationIdAndEvaluationStatus(any(), any()) } returns listOf(
             createEvaluationTarget(userId = 2L, evaluationStatus = FAIL)
         )
@@ -84,8 +77,7 @@ class MailTargetServiceTest : AnnotationSpec() {
         }
     }
 
-    @Test
-    fun `평가 상태에 따라 (FAIL) 메일 발송 시 과제 미제출자는 대상이 되지 않는다`() {
+    "평가 상태에 따라 (FAIL) 메일 발송 시 과제 미제출자는 대상이 되지 않는다" {
         every { evaluationTargetRepository.findAllByEvaluationIdAndEvaluationStatus(any(), any()) } returns listOf(
             createEvaluationTarget(
                 userId = 1L,
@@ -103,8 +95,7 @@ class MailTargetServiceTest : AnnotationSpec() {
         verify { userRepository.findAllById(emptyList()) }
     }
 
-    @Test
-    fun `평가 상태에 따라 (WAITING) 메일 발송 대상들의 이메일 정보를 불러온다`() {
+    "평가 상태에 따라 (WAITING) 메일 발송 대상들의 이메일 정보를 불러온다" {
         every { evaluationTargetRepository.findAllByEvaluationIdAndEvaluationStatus(any(), any()) } returns listOf(
             createEvaluationTarget(userId = 1L, evaluationStatus = WAITING)
         )
@@ -118,8 +109,7 @@ class MailTargetServiceTest : AnnotationSpec() {
         }
     }
 
-    @Test
-    fun `이메일 중에서 회원에 해당하는 이메일이 있으면 (회원이름, 이메일)을, 회원에 해당하는 이메일이 없으면 (공백, 이메일)을 반환한다`() {
+    "이메일 중에서 회원에 해당하는 이메일이 있으면 (회원이름, 이메일)을, 회원에 해당하는 이메일이 없으면 (공백, 이메일)을 반환한다" {
         val users = listOf(
             createUser(name = "회원1", email = "test1@email.com"),
             createUser(name = "회원3", email = "test3@email.com")
@@ -134,4 +124,4 @@ class MailTargetServiceTest : AnnotationSpec() {
         val actual = mailTargetService.findAllByEmails(emails)
         actual shouldBe mailTargetResponses
     }
-}
+})

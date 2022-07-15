@@ -1,7 +1,7 @@
 package apply.domain.user
 
 import io.kotest.assertions.assertSoftly
-import io.kotest.core.spec.style.StringSpec
+import io.kotest.core.spec.style.FreeSpec
 import io.kotest.inspectors.forAll
 import io.kotest.matchers.booleans.shouldBeFalse
 import io.kotest.matchers.booleans.shouldBeTrue
@@ -12,7 +12,7 @@ import support.createLocalDate
 import support.test.RepositoryTest
 
 @RepositoryTest
-internal class UserRepositoryTest(private val userRepository: UserRepository) : StringSpec({
+internal class UserRepositoryTest(private val userRepository: UserRepository) : FreeSpec({
 
     val users = listOf(
         User(

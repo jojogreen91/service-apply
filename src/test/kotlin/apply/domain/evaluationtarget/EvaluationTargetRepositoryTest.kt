@@ -1,6 +1,6 @@
 package apply.domain.evaluationtarget
 
-import io.kotest.core.spec.style.StringSpec
+import io.kotest.core.spec.style.FreeSpec
 import io.kotest.inspectors.forAll
 import io.kotest.matchers.booleans.shouldBeTrue
 import io.kotest.matchers.collections.shouldHaveSize
@@ -11,7 +11,7 @@ import support.test.RepositoryTest
 @RepositoryTest
 internal class EvaluationTargetRepositoryTest(
     private val evaluationTargetRepository: EvaluationTargetRepository
-) : StringSpec({
+) : FreeSpec({
 
     evaluationTargetRepository.saveAll(evaluationTargets)
 

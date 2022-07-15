@@ -7,13 +7,13 @@ import apply.pass
 import io.kotest.assertions.assertSoftly
 import io.kotest.assertions.throwables.shouldNotThrow
 import io.kotest.assertions.throwables.shouldThrow
-import io.kotest.core.spec.style.StringSpec
+import io.kotest.core.spec.style.FreeSpec
 import io.kotest.matchers.booleans.shouldBeTrue
 import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldBeEmpty
 
-internal class ApplicationFormTest : StringSpec({
+internal class ApplicationFormTest : FreeSpec({
 
     "지원서가 지원 정책을 충족하는 경우 생성한다" {
         shouldNotThrow<Exception> { ApplicationForm(1L, 1L, pass) }

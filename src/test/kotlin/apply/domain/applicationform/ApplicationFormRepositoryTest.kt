@@ -3,7 +3,7 @@ package apply.domain.applicationform
 import apply.createApplicationForm
 import apply.pass
 import io.kotest.assertions.assertSoftly
-import io.kotest.core.spec.style.StringSpec
+import io.kotest.core.spec.style.FreeSpec
 import io.kotest.matchers.booleans.shouldBeTrue
 import io.kotest.matchers.shouldBe
 import support.test.RepositoryTest
@@ -11,7 +11,7 @@ import support.test.RepositoryTest
 @RepositoryTest
 internal class ApplicationFormRepositoryTest(
     private val applicationFormRepository: ApplicationFormRepository
-) : StringSpec({
+) : FreeSpec({
 
     val applicationForm = createApplicationForm()
     val submittedApplicationForm = createApplicationForm(recruitmentId = 2L).apply { submit(pass) }

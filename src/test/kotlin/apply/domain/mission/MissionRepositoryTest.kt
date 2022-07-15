@@ -2,7 +2,7 @@ package apply.domain.mission
 
 import apply.createMission
 import io.kotest.assertions.assertSoftly
-import io.kotest.core.spec.style.StringSpec
+import io.kotest.core.spec.style.FreeSpec
 import io.kotest.matchers.booleans.shouldBeFalse
 import io.kotest.matchers.booleans.shouldBeTrue
 import io.kotest.matchers.collections.shouldHaveSize
@@ -15,7 +15,7 @@ import support.test.RepositoryTest
 internal class MissionRepositoryTest(
     private val missionRepository: MissionRepository,
     private val entityManager: TestEntityManager
-) : StringSpec({
+) : FreeSpec({
 
     fun flushAndClear() {
         entityManager.flush()

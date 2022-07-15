@@ -2,7 +2,7 @@ package apply.domain.recruitment
 
 import apply.createRecruitment
 import io.kotest.assertions.assertSoftly
-import io.kotest.core.spec.style.StringSpec
+import io.kotest.core.spec.style.FreeSpec
 import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.nulls.shouldBeNull
 import org.springframework.boot.autoconfigure.domain.EntityScan
@@ -17,7 +17,7 @@ import support.test.RepositoryTest
 internal class RecruitmentRepositoryTest(
     private val recruitmentRepository: RecruitmentRepository,
     private val entityManager: TestEntityManager
-) : StringSpec({
+) : FreeSpec({
 
     fun flushAndClear() {
         entityManager.flush()

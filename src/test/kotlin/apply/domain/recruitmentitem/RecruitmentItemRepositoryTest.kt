@@ -1,7 +1,7 @@
 package apply.domain.recruitmentitem
 
 import io.kotest.assertions.assertSoftly
-import io.kotest.core.spec.style.StringSpec
+import io.kotest.core.spec.style.FreeSpec
 import io.kotest.matchers.equality.shouldBeEqualToIgnoringFields
 import io.kotest.matchers.nulls.shouldNotBeNull
 import support.test.RepositoryTest
@@ -9,7 +9,7 @@ import support.test.RepositoryTest
 @RepositoryTest
 internal class RecruitmentItemRepositoryTest(
     private val recruitmentItemRepository: RecruitmentItemRepository
-) : StringSpec({
+) : FreeSpec({
 
     "특정 모집의 모집 항목을 순서대로 조회한다" {
         val recruitmentItems = listOf(

@@ -5,10 +5,10 @@ import apply.WRONG_PASSWORD
 import apply.createUser
 import io.kotest.assertions.throwables.shouldNotThrow
 import io.kotest.assertions.throwables.shouldThrowExactly
-import io.kotest.core.spec.style.StringSpec
+import io.kotest.core.spec.style.FreeSpec
 import io.kotest.matchers.shouldBe
 
-internal class UserTest : StringSpec({
+internal class UserTest : FreeSpec({
 
     val user: User = createUser()
 

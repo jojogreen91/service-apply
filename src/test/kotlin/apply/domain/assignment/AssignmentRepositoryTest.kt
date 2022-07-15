@@ -1,7 +1,7 @@
 package apply.domain.assignment
 
 import apply.createAssignment
-import io.kotest.core.spec.style.StringSpec
+import io.kotest.core.spec.style.FreeSpec
 import io.kotest.matchers.booleans.shouldBeTrue
 import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.nulls.shouldNotBeNull
@@ -10,7 +10,7 @@ import support.test.RepositoryTest
 @RepositoryTest
 internal class AssignmentRepositoryTest(
     private val assignmentRepository: AssignmentRepository
-) : StringSpec({
+) : FreeSpec({
 
     val assignment = createAssignment(userId = 1L, missionId = 1L)
 

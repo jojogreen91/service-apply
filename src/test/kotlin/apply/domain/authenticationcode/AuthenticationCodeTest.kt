@@ -5,13 +5,13 @@ import apply.INVALID_CODE
 import apply.VALID_CODE
 import io.kotest.assertions.assertSoftly
 import io.kotest.assertions.throwables.shouldThrowExactly
-import io.kotest.core.spec.style.StringSpec
+import io.kotest.core.spec.style.FreeSpec
 import io.kotest.matchers.booleans.shouldBeFalse
 import io.kotest.matchers.booleans.shouldBeTrue
 import io.kotest.matchers.nulls.shouldNotBeNull
 import java.time.LocalDateTime
 
-internal class AuthenticationCodeTest : StringSpec({
+internal class AuthenticationCodeTest : FreeSpec({
 
     "인증 코드를 생성한다" {
         val authenticationCode = AuthenticationCode(EMAIL)

@@ -2,12 +2,12 @@ package apply.domain.recruitment
 
 import io.kotest.assertions.throwables.shouldNotThrow
 import io.kotest.assertions.throwables.shouldThrowExactly
-import io.kotest.core.spec.style.StringSpec
+import io.kotest.core.spec.style.FreeSpec
 import io.kotest.matchers.booleans.shouldBeTrue
 import io.kotest.matchers.shouldBe
 import java.time.LocalDateTime
 
-internal class RecruitmentPeriodTest : StringSpec({
+internal class RecruitmentPeriodTest : FreeSpec({
 
     val now: LocalDateTime = LocalDateTime.now()
 

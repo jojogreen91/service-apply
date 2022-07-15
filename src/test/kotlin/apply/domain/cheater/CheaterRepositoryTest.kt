@@ -4,7 +4,7 @@ import apply.domain.user.Gender
 import apply.domain.user.Password
 import apply.domain.user.User
 import io.kotest.assertions.assertSoftly
-import io.kotest.core.spec.style.StringSpec
+import io.kotest.core.spec.style.FreeSpec
 import io.kotest.matchers.booleans.shouldBeFalse
 import io.kotest.matchers.booleans.shouldBeTrue
 import support.createLocalDate
@@ -13,7 +13,7 @@ import support.test.RepositoryTest
 @RepositoryTest
 internal class CheaterRepositoryTest(
     private val cheaterRepository: CheaterRepository
-) : StringSpec({
+) : FreeSpec({
 
     val cheater = User(
         id = 1L,

@@ -1,10 +1,10 @@
 package apply.domain.mission
 
 import io.kotest.assertions.throwables.shouldThrow
-import io.kotest.core.spec.style.StringSpec
+import io.kotest.core.spec.style.FreeSpec
 import java.time.LocalDateTime
 
-class MissionPeriodTest : StringSpec({
+class MissionPeriodTest : FreeSpec({
 
     val now: LocalDateTime = LocalDateTime.now()
 

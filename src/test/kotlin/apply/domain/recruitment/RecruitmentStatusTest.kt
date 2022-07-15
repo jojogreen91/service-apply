@@ -1,11 +1,11 @@
 package apply.domain.recruitment
 
-import io.kotest.core.spec.style.StringSpec
+import io.kotest.core.spec.style.FreeSpec
 import io.kotest.inspectors.forAll
 import io.kotest.matchers.shouldBe
 import java.time.LocalDateTime
 
-internal class RecruitmentStatusTest : StringSpec({
+internal class RecruitmentStatusTest : FreeSpec({
 
     "시작 일시 전이면 모집 예정" {
         listOf(

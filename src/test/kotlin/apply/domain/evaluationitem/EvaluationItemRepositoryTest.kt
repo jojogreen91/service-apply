@@ -3,14 +3,14 @@ package apply.domain.evaluationitem
 import apply.EVALUATION_ID
 import apply.createEvaluationItem
 import apply.domain.evaluationItem.EvaluationItemRepository
-import io.kotest.core.spec.style.StringSpec
+import io.kotest.core.spec.style.FreeSpec
 import io.kotest.matchers.shouldBe
 import support.test.RepositoryTest
 
 @RepositoryTest
 internal class EvaluationItemRepositoryTest(
     private val evaluationItemRepository: EvaluationItemRepository
-) : StringSpec({
+) : FreeSpec({
 
     "평가의 id로 평가 항목들을 Position의 오름차순으로 조회한다" {
         val evaluationItems = listOf(

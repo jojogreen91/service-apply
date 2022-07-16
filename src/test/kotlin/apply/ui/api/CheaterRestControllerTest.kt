@@ -41,40 +41,39 @@ internal class CheaterRestControllerTest : RestControllerTest() {
     )
     private val cheatedUser = createUser(id = 1L, name = "로키")
 
-    @Test
-    fun `모든 부정행위자를 찾는다`() {
-        every { cheaterService.findAll() } returns cheaterResponses
+    init {
+        "모든 부정행위자를 찾는다" {
+            every { cheaterService.findAll() } returns cheaterResponses
 
-        mockMvc.get("/api/cheaters") {
-            header(HttpHeaders.AUTHORIZATION, "Bearer valid_token")
-        }.andExpect {
-            status { isOk }
-            content { json(objectMapper.writeValueAsString(ApiResponse.success(cheaterResponses))) }
+            mockMvc.get("/api/cheaters") {
+                header(HttpHeaders.AUTHORIZATION, "Bearer valid_token")
+            }.andExpect {
+                status { isOk }
+                content { json(objectMapper.writeValueAsString(ApiResponse.success(cheaterResponses))) }
+            }
         }
-    }
 
-    @Test
-    fun `부정행위자를 추가한다`() {
-        val cheaterData = createCheaterData()
-        every { cheaterService.save(cheaterData) } just Runs
+        "부정행위자를 추가한다" {
+            val cheaterData = createCheaterData()
+            every { cheaterService.save(cheaterData) } just Runs
 
-        mockMvc.post("/api/cheaters") {
-            header(HttpHeaders.AUTHORIZATION, "Bearer valid_token")
-            contentType = MediaType.APPLICATION_JSON
-            content = objectMapper.writeValueAsString(cheaterData)
-        }.andExpect {
-            status { isOk }
+            mockMvc.post("/api/cheaters") {
+                header(HttpHeaders.AUTHORIZATION, "Bearer valid_token")
+                contentType = MediaType.APPLICATION_JSON
+                content = objectMapper.writeValueAsString(cheaterData)
+            }.andExpect {
+                status { isOk }
+            }
         }
-    }
 
-    @Test
-    fun `부정행위자를 삭제한다`() {
-        every { cheaterService.deleteById(cheatedUser.id) } just Runs
+        "부정행위자를 삭제한다" {
+            every { cheaterService.deleteById(cheatedUser.id) } just Runs
 
-        mockMvc.delete("/api/cheaters/{cheaterId}", cheatedUser.id) {
-            header(HttpHeaders.AUTHORIZATION, "Bearer valid_token")
-        }.andExpect {
-            status { isOk }
+            mockMvc.delete("/api/cheaters/{cheaterId}", cheatedUser.id) {
+                header(HttpHeaders.AUTHORIZATION, "Bearer valid_token")
+            }.andExpect {
+                status { isOk }
+            }
         }
     }
 }

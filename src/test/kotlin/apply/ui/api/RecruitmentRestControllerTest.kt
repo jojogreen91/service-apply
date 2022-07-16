@@ -41,157 +41,158 @@ internal class RecruitmentRestControllerTest : RestControllerTest() {
     private val recruitmentItems = listOf(createRecruitmentItem())
     private val recruitmentData = createRecruitmentData(recruitmentItems = listOf(createRecruitmentItemData()))
 
-    @Test
-    fun `공개된 지원서 목록을 가져온다`() {
-        every { recruitmentService.findAllNotHidden() } answers { listOf(recruitmentResponse) }
+    init {
+        fun `공개된 지원서 목록을 가져온다`() {
+            every { recruitmentService.findAllNotHidden() } answers { listOf(recruitmentResponse) }
 
-        mockMvc.perform(
-            RestDocumentationRequestBuilders.get(
-                "/api/recruitments"
-            )
-        ).andExpect(status().isOk)
-            .andDo(
-                document(
-                    "recruitment-findAllNotHidden",
-                    responseFields(
-                        fieldWithPath("message").description("응답 메시지"),
-                        fieldWithPath("body.[]").description("모집 목록"),
-                    ).andWithPrefix("body.[].", RECRUITMENT_FIELD_DESCRIPTORS)
+            mockMvc.perform(
+                RestDocumentationRequestBuilders.get(
+                    "/api/recruitments"
                 )
-            )
-    }
-
-    @Test
-    fun `지원 id로 지원 항목들을 position 순서대로 가져온다`() {
-        every { recruitmentItemService.findByRecruitmentIdOrderByPosition(recruitmentId) } answers { recruitmentItems }
-
-        mockMvc.perform(
-            RestDocumentationRequestBuilders.get(
-                "/api/recruitments/{id}/items",
-                recruitmentId,
-            )
-        ).andExpect(status().isOk)
-            .andExpect(
-                content().json(
-                    objectMapper.writeValueAsString(
-                        ApiResponse.success(recruitmentItems)
+            ).andExpect(status().isOk)
+                .andDo(
+                    document(
+                        "recruitment-findAllNotHidden",
+                        responseFields(
+                            fieldWithPath("message").description("응답 메시지"),
+                            fieldWithPath("body.[]").description("모집 목록"),
+                        ).andWithPrefix("body.[].", RECRUITMENT_FIELD_DESCRIPTORS)
                     )
                 )
-            )
-            .andDo(
-                document(
-                    "recruitments-findItemsById",
-                    pathParameters(
-                        parameterWithName("id").description("모집 ID"),
-                    ),
-                    responseFields(
-                        fieldWithPath("message").description("응답 메시지"),
-                        fieldWithPath("body.[]").description("모집 항목 목록"),
-                    ).andWithPrefix("body.[].", RECRUITMENT_ITEM_FIELD_DESCRIPTORS)
+        }
+
+
+        fun `지원 id로 지원 항목들을 position 순서대로 가져온다`() {
+            every { recruitmentItemService.findByRecruitmentIdOrderByPosition(recruitmentId) } answers { recruitmentItems }
+
+            mockMvc.perform(
+                RestDocumentationRequestBuilders.get(
+                    "/api/recruitments/{id}/items",
+                    recruitmentId,
                 )
-            )
-    }
-
-    @Test
-    fun `지원과 지원 항목을 저장한다`() {
-        every { recruitmentService.save(recruitmentData) } just Runs
-
-        mockMvc.perform(
-            RestDocumentationRequestBuilders.post(
-                "/api/recruitments"
-            )
-                .header(HttpHeaders.AUTHORIZATION, "Bearer valid_token")
-                .header(HttpHeaders.CONTENT_TYPE, "application/json")
-                .content(objectMapper.writeValueAsString(recruitmentData))
-        ).andExpect(status().isOk)
-            .andDo(
-                document(
-                    "recruitments-save",
-                    requestFields(
-                        fieldWithPath("title").type(JsonFieldType.STRING).description("모집 TITLE"),
-                        fieldWithPath("term.id").type(JsonFieldType.NUMBER).description("기수 ID"),
-                        fieldWithPath("term.name").type(JsonFieldType.STRING).description("기수 이름"),
-                        fieldWithPath("startDateTime").type(JsonFieldType.STRING).description("모집 시작일"),
-                        fieldWithPath("endDateTime").type(JsonFieldType.STRING).description("모집 마감일"),
-                        fieldWithPath("recruitable").type(JsonFieldType.BOOLEAN).description("모집 가능 여부"),
-                        fieldWithPath("hidden").type(JsonFieldType.BOOLEAN).description("HIDDEN"),
-                        fieldWithPath("recruitmentItems").type(JsonFieldType.ARRAY).description("모집 항목 목록"),
-                        fieldWithPath("id").type(JsonFieldType.NUMBER).description("모집 ID"),
-                    ).andWithPrefix("recruitmentItems.[].", RECRUITMENT_ITEM_DATA_FIELD_DESCRIPTORS)
-                )
-            )
-    }
-
-    @Test
-    fun `모집 id로 모집을 삭제한다`() {
-        every { recruitmentService.deleteById(recruitmentId) } just Runs
-
-        mockMvc.perform(
-            RestDocumentationRequestBuilders.delete(
-                "/api/recruitments/{id}",
-                recruitmentId
-            )
-                .header(HttpHeaders.AUTHORIZATION, "Bearer valid_token")
-        ).andExpect(status().isOk)
-    }
-
-    @Test
-    fun `모집 id로 모집을 가져온다`() {
-        every { recruitmentService.getById(recruitmentId) } answers { recruitment }
-
-        mockMvc.perform(
-            RestDocumentationRequestBuilders.get(
-                "/api/recruitments/{id}",
-                recruitmentId
-            )
-                .header(HttpHeaders.AUTHORIZATION, "Bearer valid_token")
-        ).andExpect(status().isOk)
-            .andExpect(
-                content().json(
-                    objectMapper.writeValueAsString(
-                        ApiResponse.success(recruitment)
+            ).andExpect(status().isOk)
+                .andExpect(
+                    content().json(
+                        objectMapper.writeValueAsString(
+                            ApiResponse.success(recruitmentItems)
+                        )
                     )
                 )
-            )
-    }
-
-    @Test
-    fun `종료되지 않은 모집 정보를 가져온다`() {
-        every { recruitmentService.getNotEndedDataById(recruitmentId) } returns recruitmentData
-
-        mockMvc.perform(
-            RestDocumentationRequestBuilders.get(
-                "/api/recruitments/{recruitmentId}/detail",
-                recruitmentId
-            )
-                .header(HttpHeaders.AUTHORIZATION, "Bearer valid_token")
-        ).andExpect(status().isOk)
-            .andExpect(
-                content().json(
-                    objectMapper.writeValueAsString(
-                        ApiResponse.success(recruitmentData)
+                .andDo(
+                    document(
+                        "recruitments-findItemsById",
+                        pathParameters(
+                            parameterWithName("id").description("모집 ID"),
+                        ),
+                        responseFields(
+                            fieldWithPath("message").description("응답 메시지"),
+                            fieldWithPath("body.[]").description("모집 항목 목록"),
+                        ).andWithPrefix("body.[].", RECRUITMENT_ITEM_FIELD_DESCRIPTORS)
                     )
                 )
-            )
-    }
+        }
 
-    @Test
-    fun `전체 모집 정보를 가져온다`() {
-        every { recruitmentService.findAll() } returns listOf(recruitmentResponse)
 
-        mockMvc.perform(
-            RestDocumentationRequestBuilders.get(
-                "/api/recruitments/all"
-            )
-                .header(HttpHeaders.AUTHORIZATION, "Bearer valid_token")
-        ).andExpect(status().isOk)
-            .andExpect(
-                content().json(
-                    objectMapper.writeValueAsString(
-                        ApiResponse.success(listOf(recruitmentResponse))
+        fun `지원과 지원 항목을 저장한다`() {
+            every { recruitmentService.save(recruitmentData) } just Runs
+
+            mockMvc.perform(
+                RestDocumentationRequestBuilders.post(
+                    "/api/recruitments"
+                )
+                    .header(HttpHeaders.AUTHORIZATION, "Bearer valid_token")
+                    .header(HttpHeaders.CONTENT_TYPE, "application/json")
+                    .content(objectMapper.writeValueAsString(recruitmentData))
+            ).andExpect(status().isOk)
+                .andDo(
+                    document(
+                        "recruitments-save",
+                        requestFields(
+                            fieldWithPath("title").type(JsonFieldType.STRING).description("모집 TITLE"),
+                            fieldWithPath("term.id").type(JsonFieldType.NUMBER).description("기수 ID"),
+                            fieldWithPath("term.name").type(JsonFieldType.STRING).description("기수 이름"),
+                            fieldWithPath("startDateTime").type(JsonFieldType.STRING).description("모집 시작일"),
+                            fieldWithPath("endDateTime").type(JsonFieldType.STRING).description("모집 마감일"),
+                            fieldWithPath("recruitable").type(JsonFieldType.BOOLEAN).description("모집 가능 여부"),
+                            fieldWithPath("hidden").type(JsonFieldType.BOOLEAN).description("HIDDEN"),
+                            fieldWithPath("recruitmentItems").type(JsonFieldType.ARRAY).description("모집 항목 목록"),
+                            fieldWithPath("id").type(JsonFieldType.NUMBER).description("모집 ID"),
+                        ).andWithPrefix("recruitmentItems.[].", RECRUITMENT_ITEM_DATA_FIELD_DESCRIPTORS)
                     )
                 )
-            )
+        }
+
+
+        fun `모집 id로 모집을 삭제한다`() {
+            every { recruitmentService.deleteById(recruitmentId) } just Runs
+
+            mockMvc.perform(
+                RestDocumentationRequestBuilders.delete(
+                    "/api/recruitments/{id}",
+                    recruitmentId
+                )
+                    .header(HttpHeaders.AUTHORIZATION, "Bearer valid_token")
+            ).andExpect(status().isOk)
+        }
+
+
+        fun `모집 id로 모집을 가져온다`() {
+            every { recruitmentService.getById(recruitmentId) } answers { recruitment }
+
+            mockMvc.perform(
+                RestDocumentationRequestBuilders.get(
+                    "/api/recruitments/{id}",
+                    recruitmentId
+                )
+                    .header(HttpHeaders.AUTHORIZATION, "Bearer valid_token")
+            ).andExpect(status().isOk)
+                .andExpect(
+                    content().json(
+                        objectMapper.writeValueAsString(
+                            ApiResponse.success(recruitment)
+                        )
+                    )
+                )
+        }
+
+
+        fun `종료되지 않은 모집 정보를 가져온다`() {
+            every { recruitmentService.getNotEndedDataById(recruitmentId) } returns recruitmentData
+
+            mockMvc.perform(
+                RestDocumentationRequestBuilders.get(
+                    "/api/recruitments/{recruitmentId}/detail",
+                    recruitmentId
+                )
+                    .header(HttpHeaders.AUTHORIZATION, "Bearer valid_token")
+            ).andExpect(status().isOk)
+                .andExpect(
+                    content().json(
+                        objectMapper.writeValueAsString(
+                            ApiResponse.success(recruitmentData)
+                        )
+                    )
+                )
+        }
+
+
+        fun `전체 모집 정보를 가져온다`() {
+            every { recruitmentService.findAll() } returns listOf(recruitmentResponse)
+
+            mockMvc.perform(
+                RestDocumentationRequestBuilders.get(
+                    "/api/recruitments/all"
+                )
+                    .header(HttpHeaders.AUTHORIZATION, "Bearer valid_token")
+            ).andExpect(status().isOk)
+                .andExpect(
+                    content().json(
+                        objectMapper.writeValueAsString(
+                            ApiResponse.success(listOf(recruitmentResponse))
+                        )
+                    )
+                )
+        }
     }
 
     companion object {

@@ -106,168 +106,168 @@ internal class UserRestControllerTest : RestControllerTest() {
         UserResponse(createUser("로키"))
     )
 
-    @Test
-    fun `유효한 회원 생성 및 검증 요청에 대하여 응답으로 토큰이 반환된다`() {
-        every { userAuthenticationService.generateTokenByRegister(userRequest) } returns VALID_TOKEN
-        every { mailService.sendAuthenticationCodeMail(any(), any()) } just Runs
+    init {
+        "유효한 회원 생성 및 검증 요청에 대하여 응답으로 토큰이 반환된다" {
+            every { userAuthenticationService.generateTokenByRegister(userRequest) } returns VALID_TOKEN
+            every { mailService.sendAuthenticationCodeMail(any(), any()) } just Runs
 
-        mockMvc.post("/api/users/register") {
-            content = objectMapper.writeValueAsBytes(userRequest.withPlainPassword(PASSWORD))
-            contentType = MediaType.APPLICATION_JSON
-        }.andExpect {
-            status { isOk }
-            content { json(objectMapper.writeValueAsString(ApiResponse.success(VALID_TOKEN))) }
+            mockMvc.post("/api/users/register") {
+                content = objectMapper.writeValueAsBytes(userRequest.withPlainPassword(PASSWORD))
+                contentType = MediaType.APPLICATION_JSON
+            }.andExpect {
+                status { isOk }
+                content { json(objectMapper.writeValueAsString(ApiResponse.success(VALID_TOKEN))) }
+            }
         }
-    }
 
-    @Test
-    fun `올바른 회원 로그인 요청에 응답으로 Token을 반환한다`() {
-        every {
-            userAuthenticationService.generateTokenByLogin(userLoginRequest)
-        } returns VALID_TOKEN
 
-        mockMvc.post("/api/users/login") {
-            content = objectMapper.writeValueAsBytes(userLoginRequest.withPlainPassword(PASSWORD))
-            contentType = MediaType.APPLICATION_JSON
-        }.andExpect {
-            status { isOk }
-            content { json(objectMapper.writeValueAsString(ApiResponse.success(VALID_TOKEN))) }
+        "올바른 회원 로그인 요청에 응답으로 Token을 반환한다" {
+            every {
+                userAuthenticationService.generateTokenByLogin(userLoginRequest)
+            } returns VALID_TOKEN
+
+            mockMvc.post("/api/users/login") {
+                content = objectMapper.writeValueAsBytes(userLoginRequest.withPlainPassword(PASSWORD))
+                contentType = MediaType.APPLICATION_JSON
+            }.andExpect {
+                status { isOk }
+                content { json(objectMapper.writeValueAsString(ApiResponse.success(VALID_TOKEN))) }
+            }
         }
-    }
 
-    @Test
-    fun `잘못된 회원 로그인 요청에 응답으로 403 Forbidden을 반환한다`() {
-        every { userAuthenticationService.generateTokenByLogin(invalidUserLoginRequest) } throws UnidentifiedUserException()
 
-        mockMvc.post("/api/users/login") {
-            content = objectMapper.writeValueAsBytes(invalidUserLoginRequest.withPlainPassword(INVALID_PASSWORD))
-            contentType = MediaType.APPLICATION_JSON
-        }.andExpect {
-            status { isForbidden }
+        "잘못된 회원 로그인 요청에 응답으로 403 Forbidden을 반환한다" {
+            every { userAuthenticationService.generateTokenByLogin(invalidUserLoginRequest) } throws UnidentifiedUserException()
+
+            mockMvc.post("/api/users/login") {
+                content = objectMapper.writeValueAsBytes(invalidUserLoginRequest.withPlainPassword(INVALID_PASSWORD))
+                contentType = MediaType.APPLICATION_JSON
+            }.andExpect {
+                status { isForbidden }
+            }
         }
-    }
 
-    @Test
-    fun `올바른 비밀번호 찾기 요청에 응답으로 NoContent를 반환한다`() {
-        every { userService.resetPassword(userPasswordFindRequest) } just Runs
 
-        mockMvc.post("/api/users/reset-password") {
-            content = objectMapper.writeValueAsBytes(userPasswordFindRequest)
-            contentType = MediaType.APPLICATION_JSON
-        }.andExpect {
-            status { isNoContent }
+        "올바른 비밀번호 찾기 요청에 응답으로 NoContent를 반환한다" {
+            every { userService.resetPassword(userPasswordFindRequest) } just Runs
+
+            mockMvc.post("/api/users/reset-password") {
+                content = objectMapper.writeValueAsBytes(userPasswordFindRequest)
+                contentType = MediaType.APPLICATION_JSON
+            }.andExpect {
+                status { isNoContent }
+            }
         }
-    }
 
-    @Test
-    fun `잘못된 비밀번호 찾기 요청에 응답으로 403 Forbidden을 반환한다`() {
-        every { userService.resetPassword(inValidUserPasswordFindRequest) } throws UnidentifiedUserException()
 
-        mockMvc.post("/api/users/reset-password") {
-            content = objectMapper.writeValueAsBytes(inValidUserPasswordFindRequest)
-            contentType = MediaType.APPLICATION_JSON
-        }.andExpect {
-            status { isForbidden }
+        "잘못된 비밀번호 찾기 요청에 응답으로 403 Forbidden을 반환한다" {
+            every { userService.resetPassword(inValidUserPasswordFindRequest) } throws UnidentifiedUserException()
+
+            mockMvc.post("/api/users/reset-password") {
+                content = objectMapper.writeValueAsBytes(inValidUserPasswordFindRequest)
+                contentType = MediaType.APPLICATION_JSON
+            }.andExpect {
+                status { isForbidden }
+            }
         }
-    }
 
-    @Test
-    fun `올바른 비밀번호 변경 요청에 응답으로 NoContent를 반환한다`() {
-        every { userService.editPassword(any(), eq(validEditPasswordRequest)) } just Runs
 
-        val actualValidEditPasswordRequest = createValidEditPasswordRequest()
+        "올바른 비밀번호 변경 요청에 응답으로 NoContent를 반환한다" {
+            every { userService.editPassword(any(), eq(validEditPasswordRequest)) } just Runs
 
-        mockMvc.post("/api/users/edit-password") {
-            content = objectMapper.writeValueAsBytes(actualValidEditPasswordRequest)
-            contentType = MediaType.APPLICATION_JSON
-            header(AUTHORIZATION, "Bearer valid_token")
-        }.andExpect {
-            status { isNoContent }
+            val actualValidEditPasswordRequest = createValidEditPasswordRequest()
+
+            mockMvc.post("/api/users/edit-password") {
+                content = objectMapper.writeValueAsBytes(actualValidEditPasswordRequest)
+                contentType = MediaType.APPLICATION_JSON
+                header(AUTHORIZATION, "Bearer valid_token")
+            }.andExpect {
+                status { isNoContent }
+            }
         }
-    }
 
-    @Test
-    fun `잘못된 비밀번호 변경 요청에 응답으로 403 Forbidden을 반환한다`() {
-        every { userService.editPassword(any(), eq(inValidEditPasswordRequest)) } throws UnidentifiedUserException()
 
-        val actualInValidEditPasswordRequest = createInValidEditPasswordRequest()
+        "잘못된 비밀번호 변경 요청에 응답으로 403 Forbidden을 반환한다" {
+            every { userService.editPassword(any(), eq(inValidEditPasswordRequest)) } throws UnidentifiedUserException()
 
-        mockMvc.post("/api/users/edit-password") {
-            content = objectMapper.writeValueAsBytes(actualInValidEditPasswordRequest)
-            contentType = MediaType.APPLICATION_JSON
-            header(AUTHORIZATION, "Bearer valid_token")
-        }.andExpect {
-            status { isForbidden }
+            val actualInValidEditPasswordRequest = createInValidEditPasswordRequest()
+
+            mockMvc.post("/api/users/edit-password") {
+                content = objectMapper.writeValueAsBytes(actualInValidEditPasswordRequest)
+                contentType = MediaType.APPLICATION_JSON
+                header(AUTHORIZATION, "Bearer valid_token")
+            }.andExpect {
+                status { isForbidden }
+            }
         }
-    }
 
-    @Test
-    fun `이메일 인증 코드 요청에 응답으로 NoContent를 반환한다`() {
-        val authenticationCode = AuthenticationCode("authentication-code@email.com")
-        every { userAuthenticationService.generateAuthenticationCode(any()) } returns authenticationCode.code
-        every { mailService.sendAuthenticationCodeMail(authenticationCode.email, authenticationCode.code) } just Runs
 
-        mockMvc.post("/api/users/authentication-code") {
-            param("email", authenticationCode.email)
-        }.andExpect {
-            status { isNoContent }
+        "이메일 인증 코드 요청에 응답으로 NoContent를 반환한다" {
+            val authenticationCode = AuthenticationCode("authentication-code@email.com")
+            every { userAuthenticationService.generateAuthenticationCode(any()) } returns authenticationCode.code
+            every { mailService.sendAuthenticationCodeMail(authenticationCode.email, authenticationCode.code) } just Runs
+
+            mockMvc.post("/api/users/authentication-code") {
+                param("email", authenticationCode.email)
+            }.andExpect {
+                status { isNoContent }
+            }
         }
-    }
 
-    @Test
-    fun `이메일 인증 요청에 응답으로 NoContent를 반환한다`() {
-        every { userAuthenticationService.authenticateEmail(userRequest.email, any()) } just Runs
 
-        mockMvc.post("/api/users/authenticate-email") {
-            param("email", userRequest.email)
-            param("authenticationCode", "code")
-        }.andExpect {
-            status { isNoContent }
+        "이메일 인증 요청에 응답으로 NoContent를 반환한다" {
+            every { userAuthenticationService.authenticateEmail(userRequest.email, any()) } just Runs
+
+            mockMvc.post("/api/users/authenticate-email") {
+                param("email", userRequest.email)
+                param("authenticationCode", "code")
+            }.andExpect {
+                status { isNoContent }
+            }
         }
-    }
 
-    @Test
-    fun `키워드(이름 or 이메일)로 회원들을 조회한다`() {
-        every { userService.findAllByKeyword(userKeyword) } returns userResponses
 
-        mockMvc.get(
-            "/api/users",
-            userKeyword
-        ) {
-            contentType = MediaType.APPLICATION_JSON
-            header(AUTHORIZATION, "Bearer valid_token")
-            param("keyword", userKeyword)
-        }.andExpect {
-            status { isOk }
-            content { json(objectMapper.writeValueAsString(ApiResponse.success(userResponses))) }
+        "키워드(이름 or 이메일)로 회원들을 조회한다" {
+            every { userService.findAllByKeyword(userKeyword) } returns userResponses
+
+            mockMvc.get(
+                "/api/users",
+                userKeyword
+            ) {
+                contentType = MediaType.APPLICATION_JSON
+                header(AUTHORIZATION, "Bearer valid_token")
+                param("keyword", userKeyword)
+            }.andExpect {
+                status { isOk }
+                content { json(objectMapper.writeValueAsString(ApiResponse.success(userResponses))) }
+            }
         }
-    }
 
-    @Test
-    fun `회원이 자신의 정보를 조회한다`() {
-        val response = UserResponse(createUser())
-        every { userService.getInformation(any()) } returns response
 
-        mockMvc.get("/api/users/me") {
-            contentType = MediaType.APPLICATION_JSON
-            header(AUTHORIZATION, "Bearer valid_token")
-        }.andExpect {
-            status { isOk }
-            content { json(objectMapper.writeValueAsString(ApiResponse.success(response))) }
+        "회원이 자신의 정보를 조회한다" {
+            val response = UserResponse(createUser())
+            every { userService.getInformation(any()) } returns response
+
+            mockMvc.get("/api/users/me") {
+                contentType = MediaType.APPLICATION_JSON
+                header(AUTHORIZATION, "Bearer valid_token")
+            }.andExpect {
+                status { isOk }
+                content { json(objectMapper.writeValueAsString(ApiResponse.success(response))) }
+            }
         }
-    }
 
-    @Test
-    fun `회원이 정보를 변경한다`() {
-        val request = EditInformationRequest("010-9999-9999")
-        every { userService.editInformation(any(), request) } just Runs
+        "회원이 정보를 변경한다" {
+            val request = EditInformationRequest("010-9999-9999")
+            every { userService.editInformation(any(), request) } just Runs
 
-        mockMvc.patch("/api/users/information") {
-            content = objectMapper.writeValueAsBytes(request)
-            contentType = MediaType.APPLICATION_JSON
-            header(AUTHORIZATION, "Bearer valid_token")
-        }.andExpect {
-            status { isNoContent }
+            mockMvc.patch("/api/users/information") {
+                content = objectMapper.writeValueAsBytes(request)
+                contentType = MediaType.APPLICATION_JSON
+                header(AUTHORIZATION, "Bearer valid_token")
+            }.andExpect {
+                status { isNoContent }
+            }
         }
     }
 

@@ -5,31 +5,28 @@ import apply.EVALUATION_ITEM_TITLE
 import apply.createEvaluationItemData
 import apply.createEvaluationItemForm
 import io.kotest.assertions.assertSoftly
-import io.kotest.core.spec.style.AnnotationSpec
+import io.kotest.core.spec.style.FreeSpec
 import io.kotest.matchers.nulls.shouldBeNull
 import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
 
-internal class EvaluationItemFormTest : AnnotationSpec() {
-    @Test
-    fun `유효한 값을 입력하는 경우`() {
+internal class EvaluationItemFormTest : FreeSpec({
+    "유효한 값을 입력하는 경우" {
         val actual = createEvaluationItemForm().bindOrNull()
 
         actual.shouldNotBeNull()
         assertSoftly {
-            actual!!.title shouldBe EVALUATION_ITEM_TITLE
-            actual!!.position shouldBe EVALUATION_ITEM_POSITION
+            actual.title shouldBe EVALUATION_ITEM_TITLE
+            actual.position shouldBe EVALUATION_ITEM_POSITION
         }
     }
 
-    @Test
-    fun `잘못된 값을 입력한 경우`() {
+    "잘못된 값을 입력한 경우" {
         val actual = createEvaluationItemForm(title = "").bindOrNull()
         actual.shouldBeNull()
     }
 
-    @Test
-    fun `양식에 값을 채울 수 있다`() {
+    "양식에 값을 채울 수 있다" {
         val data = createEvaluationItemData(id = 1L)
         val actual = createEvaluationItemForm().run {
             fill(data)
@@ -37,4 +34,4 @@ internal class EvaluationItemFormTest : AnnotationSpec() {
         }
         actual shouldBe createEvaluationItemData(id = 1L)
     }
-}
+})

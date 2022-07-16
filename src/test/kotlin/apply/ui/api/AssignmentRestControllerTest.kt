@@ -26,54 +26,53 @@ internal class AssignmentRestControllerTest : RestControllerTest() {
     private val recruitmentId = 1L
     private val missionId = 1L
 
-    @Test
-    fun `과제 제출물을 제출한다`() {
-        every { assignmentService.create(any(), any(), createAssignmentRequest()) } just Runs
+    init {
+        "과제 제출물을 제출한다" {
+            every { assignmentService.create(any(), any(), createAssignmentRequest()) } just Runs
 
-        mockMvc.post(
-            "/api/recruitments/{recruitmentId}/missions/{missionId}/assignments",
-            recruitmentId,
-            missionId
-        ) {
-            contentType = MediaType.APPLICATION_JSON
-            content = objectMapper.writeValueAsString(createAssignmentRequest())
-            header(HttpHeaders.AUTHORIZATION, "Bearer valid_token")
-        }.andExpect {
-            status { isOk }
+            mockMvc.post(
+                "/api/recruitments/{recruitmentId}/missions/{missionId}/assignments",
+                recruitmentId,
+                missionId
+            ) {
+                contentType = MediaType.APPLICATION_JSON
+                content = objectMapper.writeValueAsString(createAssignmentRequest())
+                header(HttpHeaders.AUTHORIZATION, "Bearer valid_token")
+            }.andExpect {
+                status { isOk }
+            }
         }
-    }
 
-    @Test
-    fun `나의 과제 제출물을 조회한다`() {
-        val assignmentResponse = createAssignmentResponse()
-        every { assignmentService.getByUserIdAndMissionId(any(), any()) } returns assignmentResponse
+        "나의 과제 제출물을 조회한다" {
+            val assignmentResponse = createAssignmentResponse()
+            every { assignmentService.getByUserIdAndMissionId(any(), any()) } returns assignmentResponse
 
-        mockMvc.get(
-            "/api/recruitments/{recruitmentId}/missions/{missionId}/assignments/me",
-            recruitmentId,
-            missionId
-        ) {
-            contentType = MediaType.APPLICATION_JSON
-            header(HttpHeaders.AUTHORIZATION, "Bearer valid_token")
-        }.andExpect {
-            status { isOk }
-            content { json(objectMapper.writeValueAsString(ApiResponse.success(assignmentResponse))) }
+            mockMvc.get(
+                "/api/recruitments/{recruitmentId}/missions/{missionId}/assignments/me",
+                recruitmentId,
+                missionId
+            ) {
+                contentType = MediaType.APPLICATION_JSON
+                header(HttpHeaders.AUTHORIZATION, "Bearer valid_token")
+            }.andExpect {
+                status { isOk }
+                content { json(objectMapper.writeValueAsString(ApiResponse.success(assignmentResponse))) }
+            }
         }
-    }
 
-    @Test
-    fun `특정 평가 대상자의 특정 과제에 해당하는 과제 제출물을 조회한다`() {
-        val assignmentData = createAssignmentData()
-        every { assignmentService.findByEvaluationTargetId(any()) } returns assignmentData
-        mockMvc.get(
-            "/api/recruitments/{recruitmentId}/targets/{targetId}/assignments",
-            recruitmentId,
-            1L,
-        ) {
-            header(HttpHeaders.AUTHORIZATION, "Bearer valid_token")
-        }.andExpect {
-            status { isOk }
-            content { json(objectMapper.writeValueAsString(ApiResponse.success(assignmentData))) }
+        "특정 평가 대상자의 특정 과제에 해당하는 과제 제출물을 조회한다" {
+            val assignmentData = createAssignmentData()
+            every { assignmentService.findByEvaluationTargetId(any()) } returns assignmentData
+            mockMvc.get(
+                "/api/recruitments/{recruitmentId}/targets/{targetId}/assignments",
+                recruitmentId,
+                1L,
+            ) {
+                header(HttpHeaders.AUTHORIZATION, "Bearer valid_token")
+            }.andExpect {
+                status { isOk }
+                content { json(objectMapper.writeValueAsString(ApiResponse.success(assignmentData))) }
+            }
         }
     }
 }

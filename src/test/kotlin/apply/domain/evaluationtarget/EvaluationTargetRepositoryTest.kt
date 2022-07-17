@@ -1,42 +1,21 @@
 package apply.domain.evaluationtarget
 
-import io.kotest.core.spec.style.AnnotationSpec
+import io.kotest.core.spec.style.FreeSpec
 import io.kotest.inspectors.forAll
 import io.kotest.matchers.booleans.shouldBeTrue
 import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.equality.shouldBeEqualToUsingFields
 import io.kotest.matchers.shouldBe
-import org.springframework.beans.factory.annotation.Autowired
 import support.test.RepositoryTest
 
 @RepositoryTest
-class EvaluationTargetRepositoryTest : AnnotationSpec() {
+internal class EvaluationTargetRepositoryTest(
+    private val evaluationTargetRepository: EvaluationTargetRepository
+) : FreeSpec({
 
-    @Autowired
-    private lateinit var evaluationTargetRepository: EvaluationTargetRepository
+    evaluationTargetRepository.saveAll(evaluationTargets)
 
-    private val evaluationTargets: List<EvaluationTarget> = listOf(
-        EvaluationTarget(
-            EVALUATION_ID,
-            userId = 1L
-        ),
-        EvaluationTarget(
-            EVALUATION_ID,
-            userId = 2L
-        )
-    )
-
-    companion object {
-        private const val EVALUATION_ID = 1L
-    }
-
-    @BeforeEach
-    fun setUp() {
-        evaluationTargetRepository.saveAll(evaluationTargets)
-    }
-
-    @Test
-    fun `평가의 id로 평가 대상자를 찾는다`() {
+    "평가의 id로 평가 대상자를 찾는다" {
         val results = evaluationTargetRepository.findAllByEvaluationId(EVALUATION_ID)
 
         results.zip(evaluationTargets)
@@ -45,8 +24,7 @@ class EvaluationTargetRepositoryTest : AnnotationSpec() {
             }
     }
 
-    @Test
-    fun `평가의 id를 가지고 있는 평가 대상자의 존재 여부를 확인한다`() {
+    "평가의 id를 가지고 있는 평가 대상자의 존재 여부를 확인한다" {
         listOf(
             1L to true,
             2L to false
@@ -56,15 +34,13 @@ class EvaluationTargetRepositoryTest : AnnotationSpec() {
         }
     }
 
-    @Test
-    fun `지원자의 id들에 해당되는 평가 대상자를 제거한다`() {
+    "지원자의 id들에 해당되는 평가 대상자를 제거한다" {
         evaluationTargetRepository.deleteByUserIdIn(setOf(1L, 2L))
 
         evaluationTargetRepository.count() shouldBe 0
     }
 
-    @Test
-    fun `지정한 평가에 해당되고 지원자의 id들에 해당되는 평가 대상자를 제거한다`() {
+    "지정한 평가에 해당되고 지원자의 id들에 해당되는 평가 대상자를 제거한다" {
         evaluationTargetRepository.save(
             EvaluationTarget(
                 evaluationId = 2L,
@@ -101,5 +77,20 @@ class EvaluationTargetRepositoryTest : AnnotationSpec() {
             val isExists = evaluationTargetRepository.existsByUserIdAndEvaluationId(userId, EVALUATION_ID)
             isExists.shouldBeTrue()
         }
+    }
+}) {
+    companion object {
+        private const val EVALUATION_ID = 1L
+        val evaluationTargets: List<EvaluationTarget> = listOf(
+            EvaluationTarget(
+                EVALUATION_ID,
+                userId = 1L
+            ),
+            EvaluationTarget(
+                EVALUATION_ID,
+                userId = 2L
+            )
+        )
+
     }
 }

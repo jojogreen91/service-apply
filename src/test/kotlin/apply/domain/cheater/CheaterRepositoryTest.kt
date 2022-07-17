@@ -4,7 +4,7 @@ import apply.domain.user.Gender
 import apply.domain.user.Password
 import apply.domain.user.User
 import io.kotest.assertions.assertSoftly
-import io.kotest.core.spec.style.AnnotationSpec
+import io.kotest.core.spec.style.FreeSpec
 import io.kotest.matchers.booleans.shouldBeFalse
 import io.kotest.matchers.booleans.shouldBeTrue
 import support.createLocalDate
@@ -13,9 +13,9 @@ import support.test.RepositoryTest
 @RepositoryTest
 internal class CheaterRepositoryTest(
     private val cheaterRepository: CheaterRepository
-) : AnnotationSpec() {
+) : FreeSpec({
 
-    private val cheater = User(
+    val cheater = User(
         id = 1L,
         name = "홍길동1",
         email = "a@email.com",
@@ -25,7 +25,7 @@ internal class CheaterRepositoryTest(
         password = Password("password")
     )
 
-    private val user = User(
+    val user = User(
         id = 2L,
         name = "홍길동2",
         email = "b@email.com",
@@ -35,17 +35,12 @@ internal class CheaterRepositoryTest(
         password = Password("password")
     )
 
-    @BeforeEach
-    internal fun setUp() {
-        cheaterRepository.save(Cheater(cheater.email))
-    }
+    cheaterRepository.save(Cheater(cheater.email))
 
-    @Test
-    fun `지원자의 부정 행위 여부를 확인한다`() {
-
+    "지원자의 부정 행위 여부를 확인한다" {
         assertSoftly {
             cheaterRepository.existsByEmail(cheater.email).shouldBeTrue()
             cheaterRepository.existsByEmail(user.email).shouldBeFalse()
         }
     }
-}
+})

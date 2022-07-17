@@ -3,25 +3,21 @@ package apply.domain.applicationform
 import apply.createApplicationForm
 import apply.pass
 import io.kotest.assertions.assertSoftly
-import io.kotest.core.spec.style.AnnotationSpec
+import io.kotest.core.spec.style.FreeSpec
 import io.kotest.matchers.booleans.shouldBeTrue
 import io.kotest.matchers.shouldBe
 import support.test.RepositoryTest
 
 @RepositoryTest
-class ApplicationFormRepositoryTest(
+internal class ApplicationFormRepositoryTest(
     private val applicationFormRepository: ApplicationFormRepository
-) : AnnotationSpec() {
-    @BeforeAll
-    internal fun setUp() {
-        val applicationForm = createApplicationForm()
-        val submittedApplicationForm = createApplicationForm(recruitmentId = 2L).apply { submit(pass) }
+) : FreeSpec({
 
-        applicationFormRepository.saveAll(listOf(applicationForm, submittedApplicationForm))
-    }
+    val applicationForm = createApplicationForm()
+    val submittedApplicationForm = createApplicationForm(recruitmentId = 2L).apply { submit(pass) }
+    applicationFormRepository.saveAll(listOf(applicationForm, submittedApplicationForm))
 
-    @Test
-    fun `지원자가 지원한 모집의 지원서를 가져온다`() {
+    "지원자가 지원한 모집의 지원서를 가져온다" {
         val form = applicationFormRepository.findByRecruitmentIdAndUserId(1L, 1L)!!
 
         assertSoftly {
@@ -32,8 +28,7 @@ class ApplicationFormRepositoryTest(
         }
     }
 
-    @Test
-    fun `지원자가 지원서를 제출한 이력이 있는지 확인한다`() {
+    "지원자가 지원서를 제출한 이력이 있는지 확인한다" {
         applicationFormRepository.existsByUserIdAndSubmittedTrue(1L).shouldBeTrue()
     }
-}
+})

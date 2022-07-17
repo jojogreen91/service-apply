@@ -1,13 +1,13 @@
 package apply.domain.recruitment
 
-import io.kotest.core.spec.style.AnnotationSpec
+import io.kotest.core.spec.style.FreeSpec
 import io.kotest.inspectors.forAll
 import io.kotest.matchers.shouldBe
 import java.time.LocalDateTime
 
-internal class RecruitmentStatusTest : AnnotationSpec() {
-    @Test
-    fun `시작 일시 전이면 모집 예정`() {
+internal class RecruitmentStatusTest : FreeSpec({
+
+    "시작 일시 전이면 모집 예정" {
         listOf(
             true,
             false
@@ -19,8 +19,7 @@ internal class RecruitmentStatusTest : AnnotationSpec() {
         }
     }
 
-    @Test
-    fun `모집 기간 사이이면서 모집이 가능한 경우 모집 중`() {
+    "모집 기간 사이이면서 모집이 가능한 경우 모집 중" {
         val yesterday = LocalDateTime.now().minusDays(1L)
         val tomorrow = LocalDateTime.now().plusDays(1L)
         val period = RecruitmentPeriod(startDateTime = yesterday, endDateTime = tomorrow)
@@ -28,8 +27,7 @@ internal class RecruitmentStatusTest : AnnotationSpec() {
         status shouldBe RecruitmentStatus.RECRUITING
     }
 
-    @Test
-    fun `모집 기간 사이이면서 모집이 불가능한 경우 모집 중지`() {
+    "모집 기간 사이이면서 모집이 불가능한 경우 모집 중지" {
         val yesterday = LocalDateTime.now().minusDays(1L)
         val tomorrow = LocalDateTime.now().plusDays(1L)
         val period = RecruitmentPeriod(startDateTime = yesterday, endDateTime = tomorrow)
@@ -37,8 +35,7 @@ internal class RecruitmentStatusTest : AnnotationSpec() {
         status shouldBe RecruitmentStatus.UNRECRUITABLE
     }
 
-    @Test
-    fun `종료 일시가 지나면 모집 종료`() {
+    "종료 일시가 지나면 모집 종료" {
         listOf(
             true, false
         ).forAll {
@@ -48,4 +45,4 @@ internal class RecruitmentStatusTest : AnnotationSpec() {
             status shouldBe RecruitmentStatus.ENDED
         }
     }
-}
+})

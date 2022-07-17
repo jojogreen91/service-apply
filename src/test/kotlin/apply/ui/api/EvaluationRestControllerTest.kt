@@ -28,58 +28,56 @@ internal class EvaluationRestControllerTest : RestControllerTest() {
     @MockkBean
     private lateinit var evaluationService: EvaluationService
 
-    @Test
-    fun `평가를 추가한다`() {
-        every { evaluationService.save(any()) } just Runs
+    init {
+        "평가를 추가한다" {
+            every { evaluationService.save(any()) } just Runs
 
-        mockMvc.post("/api/recruitments/{recruitmentId}/evaluations", 1L) {
-            content = objectMapper.writeValueAsBytes(
-                EvaluationData(createEvaluation(), createRecruitment(), null, emptyList())
+            mockMvc.post("/api/recruitments/{recruitmentId}/evaluations", 1L) {
+                content = objectMapper.writeValueAsBytes(
+                    EvaluationData(createEvaluation(), createRecruitment(), null, emptyList())
+                )
+                contentType = MediaType.APPLICATION_JSON
+                header(HttpHeaders.AUTHORIZATION, "Bearer valid_token")
+            }.andExpect {
+                status { isOk }
+            }
+        }
+
+        "특정 평가를 조회한다" {
+            val evaluationData = EvaluationData(id = 1L)
+            every { evaluationService.getDataById(any()) } returns evaluationData
+
+            mockMvc.get("/api/recruitments/{recruitmentId}/evaluations/{evaluationId}", 1L, evaluationData.id) {
+                header(HttpHeaders.AUTHORIZATION, "Bearer valid_token")
+            }.andExpect {
+                status { isOk }
+                content { json(objectMapper.writeValueAsString(ApiResponse.success(evaluationData))) }
+            }
+        }
+
+        "모든 (상세한) 평가를 조회한다" {
+            val expected = listOf(
+                EvaluationResponse(1L, "평가1", "평가1 설명", "우테코 3기 백엔드", 4L, "", 2L),
+                EvaluationResponse(2L, "평가2", "평가2 설명", "우테코 3기 프론트", 5L, "", 2L),
             )
-            contentType = MediaType.APPLICATION_JSON
-            header(HttpHeaders.AUTHORIZATION, "Bearer valid_token")
-        }.andExpect {
-            status { isOk }
+            every { evaluationService.findAllWithRecruitment() } returns expected
+
+            mockMvc.get("/api/recruitments/{recruitmentId}/evaluations", 1L) {
+                header(HttpHeaders.AUTHORIZATION, "Bearer valid_token")
+            }.andExpect {
+                status { isOk }
+                content { json(objectMapper.writeValueAsString(ApiResponse.success(expected))) }
+            }
         }
-    }
 
-    @Test
-    fun `특정 평가를 조회한다`() {
-        val evaluationData = EvaluationData(id = 1L)
-        every { evaluationService.getDataById(any()) } returns evaluationData
+        "평가를 삭제한다" {
+            every { evaluationService.deleteById(any()) } just Runs
 
-        mockMvc.get("/api/recruitments/{recruitmentId}/evaluations/{evaluationId}", 1L, evaluationData.id) {
-            header(HttpHeaders.AUTHORIZATION, "Bearer valid_token")
-        }.andExpect {
-            status { isOk }
-            content { json(objectMapper.writeValueAsString(ApiResponse.success(evaluationData))) }
-        }
-    }
-
-    @Test
-    fun `모든 (상세한) 평가를 조회한다`() {
-        val expected = listOf(
-            EvaluationResponse(1L, "평가1", "평가1 설명", "우테코 3기 백엔드", 4L, "", 2L),
-            EvaluationResponse(2L, "평가2", "평가2 설명", "우테코 3기 프론트", 5L, "", 2L),
-        )
-        every { evaluationService.findAllWithRecruitment() } returns expected
-
-        mockMvc.get("/api/recruitments/{recruitmentId}/evaluations", 1L) {
-            header(HttpHeaders.AUTHORIZATION, "Bearer valid_token")
-        }.andExpect {
-            status { isOk }
-            content { json(objectMapper.writeValueAsString(ApiResponse.success(expected))) }
-        }
-    }
-
-    @Test
-    fun `평가를 삭제한다`() {
-        every { evaluationService.deleteById(any()) } just Runs
-
-        mockMvc.delete("/api/recruitments/{recruitmentId}/evaluations/{evaluationId}", 1L, 1L) {
-            header(HttpHeaders.AUTHORIZATION, "Bearer valid_token")
-        }.andExpect {
-            status { isOk }
+            mockMvc.delete("/api/recruitments/{recruitmentId}/evaluations/{evaluationId}", 1L, 1L) {
+                header(HttpHeaders.AUTHORIZATION, "Bearer valid_token")
+            }.andExpect {
+                status { isOk }
+            }
         }
     }
 }
